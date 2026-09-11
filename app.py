@@ -27,7 +27,12 @@ from scorer import get_scorer
 # Load environment configuration with override=True
 load_dotenv(override=True)
 
-app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
+)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-replace-in-production")
 app.config["JSON_SORT_KEYS"] = False
 
