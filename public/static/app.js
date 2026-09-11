@@ -496,10 +496,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 6. Save to client-side localStorage for instant offline / cross-session history
             try {
-                if (logAudit && data.success) {
+                if (data.success && data.truncated_hash) {
                     const clientRecord = {
                         id: Date.now() % 10000,
-                        password_hash: data.truncated_hash || 'a1b2c3d4...ef01',
+                        password_hash: data.truncated_hash,
                         score: data.score,
                         strength: data.strength || (data.score > 70 ? 'Strong' : data.score > 40 ? 'Fair' : 'Weak'),
                         length: data.length,
@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         has_digit: data.has_digit,
                         has_symbol: data.has_symbol,
                         is_common: data.is_common,
-                        checked_at: new Date().toISOString()
+                        checked_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
                     };
                     saveClientAuditRecord(clientRecord);
                 }
@@ -859,10 +859,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Auto-hydrate history table if empty state is present on page load
-    if (historyTableContainer && document.getElementById('emptyHistoryState')) {
+    // Always auto-hydrate history table on page load to ensure latest audits appear
+    if (historyTableContainer) {
         refreshHistoryData(true);
     }
+
+    // Save current password audit to history before navigating if user clicks VIEW HISTORY
+    const viewHistoryBtn = document.getElementById('viewHistoryBtn');
+    const viewHistoryFooterBtn = document.getElementById('viewHistoryFooterBtn');
+    const navHistoryLink = document.getElementById('navHistoryLink');
+
+    function prepareHistoryNavigation() {
+        if (passwordInput && passwordInput.value && passwordInput.value.length >= 1) {
+            evaluatePassword(passwordInput.value, true);
+        }
+    }
+
+    if (viewHistoryBtn) viewHistoryBtn.addEventListener('click', prepareHistoryNavigation);
+    if (viewHistoryFooterBtn) viewHistoryFooterBtn.addEventListener('click', prepareHistoryNavigation);
+    if (navHistoryLink) navHistoryLink.addEventListener('click', prepareHistoryNavigation);
 
     // Initialize UI on page load
     if (passwordInput && !passwordInput.value) {
