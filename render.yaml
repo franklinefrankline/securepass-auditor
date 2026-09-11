@@ -1,0 +1,23 @@
+services:
+  # Web Application Service
+  - type: web
+    name: securepass-auditor
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: securepass-db
+          property: connectionString
+
+databases:
+  # Managed PostgreSQL Database
+  - name: securepass-db
+    databaseName: password_auditor
+    user: securepass_user
+    plan: free

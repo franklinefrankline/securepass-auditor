@@ -28,10 +28,13 @@ logger = logging.getLogger(__name__)
 def clean_database_url(url: str) -> str:
     """Ensures database connection URL encodes special characters in passwords safely.
 
+    Also normalizes legacy 'postgres://' prefixes used by Render/Heroku to 'postgresql://'.
     Prevents raw characters like '#' or '@' in the password from corrupting the URI.
     """
     if not url:
         return ""
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
     match = re.match(r"^(postgresql(?:\+[a-z]+)?://)([^:]+):([^@]+)@(.+)$", url)
     if match:
         prefix, user, raw_pw, host_part = match.groups()
