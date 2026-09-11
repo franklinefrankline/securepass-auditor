@@ -44,7 +44,7 @@ def get_db_connection() -> Generator[psycopg2.extensions.connection, None, None]
     Ensures transactions are committed on success and rolled back on error,
     with connections cleanly closed.
     """
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
     try:
         yield conn
         conn.commit()
