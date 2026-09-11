@@ -59,22 +59,23 @@
                     <p class="history-subtitle">Sorted by evaluation timestamp in descending order</p>
                 </div>
                 <div class="history-header-actions">
-                    <button type="button" class="btn btn-outline btn-sm" id="refreshHistoryBtn" onclick="window.location.reload();">
-                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button type="button" class="btn btn-outline btn-sm" id="refreshHistoryBtn">
+                        <svg class="icon-small" id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="23 4 23 10 17 10"/>
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                         </svg>
                         Refresh
                     </button>
-                    <a href="/" class="btn btn-primary btn-sm">
+                    <a href="/" class="btn btn-primary btn-sm" id="newAuditBtn">
                         + New Audit
                     </a>
                 </div>
             </div>
 
+            <div id="historyTableContainer">
             {% if history and history|length > 0 %}
             <div class="table-responsive">
-                <table class="history-table" aria-label="Password audit history records">
+                <table class="history-table" id="historyTable" aria-label="Password audit history records">
                     <thead>
                         <tr>
                             <th scope="col">ID</th>
@@ -86,7 +87,7 @@
                             <th scope="col">CHECKED AT</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="historyTableBody">
                         {% for record in history %}
                         <tr>
                             <td class="col-id">#{{ record.id }}</td>
@@ -118,7 +119,7 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state">
+            <div class="empty-state" id="emptyHistoryState">
                 <div class="empty-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <circle cx="12" cy="12" r="10"/>
@@ -127,15 +128,16 @@
                 </div>
                 <h3 class="empty-title">No password audits found</h3>
                 <p class="empty-description">Audit records will appear here once you analyze and save passwords in the auditor.</p>
-                <a href="/" class="btn btn-primary" style="margin-top: 1rem;">
+                <a href="/" class="btn btn-primary" style="margin-top: 1rem;" id="firstAuditBtn">
                     Perform First Password Audit
                 </a>
             </div>
             {% endif %}
+            </div>
 
             <div class="history-card-footer">
-                <span class="records-count">Displaying {{ history|length if history else 0 }} of max 20 recent records</span>
-                <a href="/" class="btn-text">
+                <span class="records-count" id="recordsCountLabel">Displaying {{ history|length if history else 0 }} of max 20 recent records</span>
+                <a href="/" class="btn-text" id="backToCheckerFooterBtn">
                     &larr; Back to Password Checker
                 </a>
             </div>
@@ -145,5 +147,122 @@
     <footer class="app-footer">
         <p>Password Strength Auditor &bull; Cryptographic Audit Log &bull; PostgreSQL 15/18</p>
     </footer>
+
+    <!-- Toast Notification for history updates -->
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const refreshBtn = document.getElementById('refreshHistoryBtn');
+            const toast = document.getElementById('toast');
+            const tableContainer = document.getElementById('historyTableContainer');
+            const recordsCountLabel = document.getElementById('recordsCountLabel');
+
+            function showToast(msg) {
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2500);
+            }
+
+            async function refreshHistoryData() {
+                if (!refreshBtn) return;
+                refreshBtn.disabled = true;
+                refreshBtn.style.opacity = '0.7';
+
+                try {
+                    const response = await fetch('/history', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const data = await response.json();
+                    const records = data.history || [];
+
+                    if (records.length === 0) {
+                        tableContainer.innerHTML = `
+                            <div class="empty-state" id="emptyHistoryState">
+                                <div class="empty-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="8" y1="12" x2="16" y2="12"/>
+                                    </svg>
+                                </div>
+                                <h3 class="empty-title">No password audits found</h3>
+                                <p class="empty-description">Audit records will appear here once you analyze and save passwords in the auditor.</p>
+                                <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Perform First Password Audit</a>
+                            </div>
+                        `;
+                    } else {
+                        const rows = records.map(r => {
+                            const strLower = (r.strength || 'weak').toLowerCase();
+                            const commonBadge = r.is_common 
+                                ? '<span class="badge badge-danger">YES</span>' 
+                                : '<span class="badge badge-subtle">No</span>';
+                            const dateStr = (r.checked_at || '').substring(0, 19).replace('T', ' ');
+
+                            return `
+                                <tr>
+                                    <td class="col-id">#${r.id}</td>
+                                    <td class="col-hash"><code class="hash-badge" title="Truncated SHA-256 hash">${r.password_hash}</code></td>
+                                    <td class="col-score"><span class="score-pill score-${strLower}">${r.score}/100</span></td>
+                                    <td class="col-strength"><span class="badge badge-${strLower}">${(r.strength || '').toUpperCase()}</span></td>
+                                    <td class="col-length">${r.length} chars</td>
+                                    <td class="col-common">${commonBadge}</td>
+                                    <td class="col-date"><time datetime="${r.checked_at}">${dateStr}</time></td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                        tableContainer.innerHTML = `
+                            <div class="table-responsive">
+                                <table class="history-table" id="historyTable" aria-label="Password audit history records">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">ID</th>
+                                            <th scope="col">TRUNCATED HASH</th>
+                                            <th scope="col">SCORE</th>
+                                            <th scope="col">STRENGTH</th>
+                                            <th scope="col">LENGTH</th>
+                                            <th scope="col">COMMON?</th>
+                                            <th scope="col">CHECKED AT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTableBody">
+                                        ${rows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
+
+                    if (recordsCountLabel) {
+                        recordsCountLabel.textContent = `Displaying ${records.length} of max 20 recent records`;
+                    }
+
+                    showToast('History refreshed successfully.');
+                } catch (err) {
+                    console.error('Failed to refresh history:', err);
+                    showToast('Failed to refresh history data.');
+                } finally {
+                    refreshBtn.disabled = false;
+                    refreshBtn.style.opacity = '1';
+                }
+            }
+
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    refreshHistoryData();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

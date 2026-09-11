@@ -311,6 +311,15 @@ body {
     display: none !important;
 }
 
+.form-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-top: 1rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+}
+
 /* ==========================================================================
    STRENGTH METER & SCORE
    ========================================================================== */

@@ -33,7 +33,7 @@
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Audit History
+                    View History
                 </a>
             </nav>
         </div>
@@ -54,48 +54,69 @@
         <section class="card auditor-card" aria-labelledby="auditorHeading">
             <h2 id="auditorHeading" class="sr-only">Password Input and Analysis</h2>
 
-            <!-- Password Input Group -->
-            <div class="form-group">
-                <div class="label-row">
-                    <label for="passwordInput" class="form-label">Target Password</label>
-                    <button type="button" class="btn-text" id="generateBtn" title="Generate a cryptographically secure random password">
-                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                        </svg>
-                        Generate Strong Password
-                    </button>
-                </div>
-
-                <div class="input-wrapper">
-                    <input
-                        type="password"
-                        id="passwordInput"
-                        class="password-input"
-                        placeholder="Type a password to test..."
-                        autocomplete="off"
-                        spellcheck="false"
-                        aria-describedby="strengthMeterHelp"
-                    >
-                    <div class="input-actions">
-                        <button type="button" id="togglePasswordBtn" class="icon-btn" aria-label="Show password" title="Toggle visibility">
-                            <svg id="eyeIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
+            <!-- Password Form (Explicit Check Password and View History) -->
+            <form id="passwordForm" method="POST" action="javascript:void(0);" novalidate>
+                <!-- Password Input Group -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="passwordInput" class="form-label">Target Password</label>
+                        <button type="button" class="btn-text" id="generateBtn" title="Generate a cryptographically secure random password">
+                            <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                             </svg>
-                            <svg id="eyeOffIcon" class="icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                                <line x1="1" y1="1" x2="23" y2="23"/>
-                            </svg>
-                        </button>
-                        <button type="button" id="copyPasswordBtn" class="icon-btn" aria-label="Copy password" title="Copy to clipboard">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                            </svg>
+                            Generate Strong Password
                         </button>
                     </div>
+
+                    <div class="input-wrapper">
+                        <input
+                            type="password"
+                            id="passwordInput"
+                            name="password"
+                            class="password-input"
+                            placeholder="Type a password to test..."
+                            autocomplete="off"
+                            spellcheck="false"
+                            aria-describedby="strengthMeterHelp"
+                        >
+                        <div class="input-actions">
+                            <button type="button" id="togglePasswordBtn" class="icon-btn" aria-label="Show password" title="Toggle visibility">
+                                <svg id="eyeIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                <svg id="eyeOffIcon" class="icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
+                            </button>
+                            <button type="button" id="copyPasswordBtn" class="icon-btn" aria-label="Copy password" title="Copy to clipboard">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Primary Action Buttons directly under password input -->
+                <div class="form-actions-row">
+                    <button type="submit" class="btn btn-primary" id="checkPasswordBtn">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Check Password
+                    </button>
+                    <a href="/history" class="btn btn-outline" id="viewHistoryBtn">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        View History
+                    </a>
+                </div>
+            </form>
 
             <!-- Strength Meter Section -->
             <div class="meter-section" id="strengthMeterHelp">
@@ -172,16 +193,14 @@
 
             <!-- Footer Action -->
             <div class="card-footer">
-                <button type="button" class="btn btn-primary" id="logAuditBtn">
+                <button type="button" class="btn btn-primary" id="checkPasswordFooterBtn">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                        <polyline points="17 21 17 13 7 13 7 21"/>
-                        <polyline points="7 3 7 8 15 8"/>
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Save Audit to Database
+                    Check Password
                 </button>
-                <a href="/history" class="btn btn-outline">
-                    View Recent Audits &rarr;
+                <a href="/history" class="btn btn-outline" id="viewHistoryFooterBtn">
+                    View History &rarr;
                 </a>
             </div>
         </section>
