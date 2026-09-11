@@ -87,6 +87,8 @@ def apply_security_headers(response: Response) -> Response:
 # Page Routes
 # ---------------------------------------------------------------------------
 @app.route("/", methods=["GET"])
+@app.route("/api/index", methods=["GET"])
+@app.route("/api/index/", methods=["GET"])
 def index():
     """Renders the main Password Strength Auditor interface."""
     return render_template("index.html")
