@@ -32,6 +32,34 @@ class IndexMiddleware:
 
         # Route matching based on query parameter or matched path
         if (
+            "__route__=login" in query
+            or "path=login" in query
+            or "/login" in matched_path
+            or path == "/login"
+        ):
+            environ["PATH_INFO"] = "/login"
+        elif (
+            "__route__=register" in query
+            or "path=register" in query
+            or "/register" in matched_path
+            or path == "/register"
+        ):
+            environ["PATH_INFO"] = "/register"
+        elif (
+            "__route__=logout" in query
+            or "path=logout" in query
+            or "/logout" in matched_path
+            or path == "/logout"
+        ):
+            environ["PATH_INFO"] = "/logout"
+        elif (
+            "__route__=settings" in query
+            or "path=settings" in query
+            or "/settings" in matched_path
+            or path == "/settings"
+        ):
+            environ["PATH_INFO"] = "/settings"
+        elif (
             "__route__=history" in query
             or "path=history" in query
             or "view=history" in query
@@ -62,7 +90,7 @@ class IndexMiddleware:
             environ["PATH_INFO"] = "/generate"
         elif path.startswith("/api/index"):
             rest = path[len("/api/index"):]
-            if rest in ("/history", "/check", "/health", "/generate"):
+            if rest in ("/login", "/register", "/logout", "/settings", "/history", "/check", "/health", "/generate"):
                 environ["PATH_INFO"] = rest
             else:
                 environ["PATH_INFO"] = rest if rest else "/"

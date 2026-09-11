@@ -146,14 +146,24 @@ def _get_sqlite_path() -> str:
 
 
 def _init_sqlite():
-    """Initializes SQLite fallback schema and seeds realistic audit records if empty."""
+    """Initializes SQLite fallback schema and seeds realistic records if empty."""
     db_path = _get_sqlite_path()
     try:
         with sqlite3.connect(db_path) as conn:
             cur = conn.cursor()
             cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    full_name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+            """)
+            cur.execute("""
                 CREATE TABLE IF NOT EXISTS audit_log (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
                     password_hash TEXT NOT NULL,
                     score INTEGER NOT NULL,
                     length INTEGER NOT NULL,
@@ -165,24 +175,189 @@ def _init_sqlite():
                     checked_at TEXT NOT NULL
                 );
             """)
+            # Ensure user_id column exists if table was created previously without it
+            cur.execute("PRAGMA table_info(audit_log);")
+            columns = [row[1] for row in cur.fetchall()]
+            if "user_id" not in columns:
+                try:
+                    cur.execute("ALTER TABLE audit_log ADD COLUMN user_id INTEGER DEFAULT 1;")
+                except Exception:
+                    pass
+
+            # Seed default demo user if table is empty
+            cur.execute("SELECT COUNT(*) FROM users;")
+            if cur.fetchone()[0] == 0:
+                from werkzeug.security import generate_password_hash
+                demo_hash = generate_password_hash("AuditAdmin2026!")
+                cur.execute("""
+                    INSERT INTO users (full_name, email, password_hash, created_at)
+                    VALUES (?, ?, ?, ?);
+                """, ("Security Analyst", "analyst@securepass.io", demo_hash, "2026-09-11 12:00:00"))
+                conn.commit()
+
             cur.execute("SELECT COUNT(*) FROM audit_log;")
             count = cur.fetchone()[0]
             if count == 0:
                 demo_records = [
-                    ("be57987b28238128498877a7df8445ab68f448c9030b4ec74121908d1690a1b2", 100, 24, 1, 1, 1, 1, 0, "2026-09-11 13:42:55"),
-                    ("4ba833b3a4a7536dfcae878434771daeeeaecb22a00185e505ecf97bb1e3c4d5", 100, 16, 1, 1, 1, 1, 0, "2026-09-11 13:20:12"),
-                    ("16081159b365824c9c819a86a6358c548777faefb5fa8d1633580556f135e6f7", 85, 14, 1, 1, 1, 1, 0, "2026-09-11 12:55:40"),
-                    ("8a4938e6e5a6a43f545f47a95b87c7161b96a9284206c71c4c1a84f3daeca8b9", 30, 6, 0, 1, 1, 0, 0, "2026-09-11 12:15:33"),
-                    ("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4c4f3a21", 20, 8, 0, 1, 1, 0, 1, "2026-09-11 11:30:18"),
+                    (1, "be57987b28238128498877a7df8445ab68f448c9030b4ec74121908d1690a1b2", 100, 24, 1, 1, 1, 1, 0, "2026-09-11 13:42:55"),
+                    (1, "4ba833b3a4a7536dfcae878434771daeeeaecb22a00185e505ecf97bb1e3c4d5", 100, 16, 1, 1, 1, 1, 0, "2026-09-11 13:20:12"),
+                    (1, "16081159b365824c9c819a86a6358c548777faefb5fa8d1633580556f135e6f7", 85, 14, 1, 1, 1, 1, 0, "2026-09-11 12:55:40"),
+                    (1, "8a4938e6e5a6a43f545f47a95b87c7161b96a9284206c71c4c1a84f3daeca8b9", 30, 6, 0, 1, 1, 0, 0, "2026-09-11 12:15:33"),
+                    (1, "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4c4f3a21", 20, 8, 0, 1, 1, 0, 1, "2026-09-11 11:30:18"),
                 ]
                 cur.executemany("""
                     INSERT INTO audit_log (
-                        password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        user_id, password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """, demo_records)
                 conn.commit()
     except Exception as e:
         logger.warning("Failed to initialize SQLite fallback: %s", e)
+
+
+def create_user(full_name: str, email: str, password_hash: str) -> Tuple[Optional[int], Optional[str]]:
+    """Creates a new user record in PostgreSQL or SQLite fallback.
+
+    Returns:
+        (user_id, error_message). When user_id is returned, error_message is None.
+    """
+    clean_name = (full_name or "").strip()
+    clean_email = (email or "").strip().lower()
+
+    if not clean_name:
+        return None, "Full name is required."
+    if not clean_email or "@" not in clean_email:
+        return None, "A valid email address is required."
+    if not password_hash:
+        return None, "Password hash cannot be empty."
+
+    # 1. Try PostgreSQL
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(%s);", (clean_email,))
+                if cur.fetchone():
+                    return None, "An account with this email address already exists."
+
+                cur.execute(
+                    """
+                    INSERT INTO users (full_name, email, password_hash)
+                    VALUES (%s, %s, %s)
+                    RETURNING id;
+                    """,
+                    (clean_name, clean_email, password_hash),
+                )
+                row = cur.fetchone()
+                if row:
+                    user_id = row[0]
+                    logger.info("SUCCESS: Created user #%s in PostgreSQL.", user_id)
+                    return user_id, None
+    except Exception as e:
+        logger.warning("PostgreSQL unavailable (%s), trying SQLite fallback for user creation.", type(e).__name__)
+
+    # 2. SQLite Fallback
+    try:
+        _init_sqlite()
+        db_path = _get_sqlite_path()
+        with sqlite3.connect(db_path) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?);", (clean_email,))
+            if cur.fetchone():
+                return None, "An account with this email address already exists."
+
+            cur.execute(
+                """
+                INSERT INTO users (full_name, email, password_hash, created_at)
+                VALUES (?, ?, ?, ?);
+                """,
+                (clean_name, clean_email, password_hash, datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")),
+            )
+            conn.commit()
+            user_id = cur.lastrowid
+            logger.info("SUCCESS: Created user #%s in SQLite fallback.", user_id)
+            return user_id, None
+    except Exception as e:
+        logger.error("ERROR: Failed to create user in SQLite fallback: %s", e)
+        return None, "Account registration failed. Please try again."
+
+
+def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    """Fetches user record by email address from PostgreSQL or SQLite fallback."""
+    clean_email = (email or "").strip().lower()
+    if not clean_email:
+        return None
+
+    # 1. Try PostgreSQL
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    "SELECT id, full_name, email, password_hash, created_at FROM users WHERE LOWER(email) = LOWER(%s);",
+                    (clean_email,),
+                )
+                row = cur.fetchone()
+                if row:
+                    return dict(row)
+    except Exception as e:
+        logger.warning("PostgreSQL unavailable (%s), querying user from SQLite fallback.", type(e).__name__)
+
+    # 2. SQLite Fallback
+    try:
+        _init_sqlite()
+        db_path = _get_sqlite_path()
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT id, full_name, email, password_hash, created_at FROM users WHERE LOWER(email) = LOWER(?);",
+                (clean_email,),
+            )
+            row = cur.fetchone()
+            if row:
+                return dict(row)
+    except Exception as e:
+        logger.error("ERROR: Failed to fetch user from SQLite fallback: %s", e)
+
+    return None
+
+
+def get_user_by_id(user_id: int) -> Optional[Dict[str, Any]]:
+    """Fetches user record by ID from PostgreSQL or SQLite fallback."""
+    if not user_id:
+        return None
+
+    # 1. Try PostgreSQL
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    "SELECT id, full_name, email, password_hash, created_at FROM users WHERE id = %s;",
+                    (user_id,),
+                )
+                row = cur.fetchone()
+                if row:
+                    return dict(row)
+    except Exception as e:
+        logger.warning("PostgreSQL unavailable (%s), querying user by id from SQLite fallback.", type(e).__name__)
+
+    # 2. SQLite Fallback
+    try:
+        _init_sqlite()
+        db_path = _get_sqlite_path()
+        with sqlite3.connect(db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT id, full_name, email, password_hash, created_at FROM users WHERE id = ?;",
+                (user_id,),
+            )
+            row = cur.fetchone()
+            if row:
+                return dict(row)
+    except Exception as e:
+        logger.error("ERROR: Failed to fetch user by id from SQLite fallback: %s", e)
+
+    return None
 
 
 def log_audit(
@@ -194,13 +369,17 @@ def log_audit(
     has_digit: bool,
     has_symbol: bool,
     is_common: bool,
+    user_id: Optional[int] = None,
 ) -> Optional[int]:
     """Inserts a password audit record into PostgreSQL or SQLite fallback.
 
     NEVER pass raw passwords to this function.
     """
+    effective_user_id = user_id if user_id is not None else 1
+
     query = """
         INSERT INTO audit_log (
+            user_id,
             password_hash,
             score,
             length,
@@ -210,10 +389,11 @@ def log_audit(
             has_symbol,
             is_common
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id;
     """
     params = (
+        int(effective_user_id),
         password_hash,
         int(score),
         int(length),
@@ -245,9 +425,10 @@ def log_audit(
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO audit_log (
-                    password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    user_id, password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """, (
+                int(effective_user_id),
                 password_hash,
                 int(score),
                 int(length),
@@ -267,27 +448,10 @@ def log_audit(
         return None
 
 
-def get_audit_history(limit: int = 20) -> List[Dict[str, Any]]:
+def get_audit_history(user_id: Optional[int] = None, limit: int = 20) -> List[Dict[str, Any]]:
     """Retrieves the latest audit records from PostgreSQL or SQLite fallback.
 
-    Returns:
-        List of audit dictionaries with truncated hashes for safe UI presentation.
-    """
-    query = """
-        SELECT
-            id,
-            password_hash,
-            score,
-            length,
-            has_upper,
-            has_lower,
-            has_digit,
-            has_symbol,
-            is_common,
-            checked_at
-        FROM audit_log
-        ORDER BY checked_at DESC
-        LIMIT %s;
+    When user_id is provided, strictly isolates audits to that specific user.
     """
     results: List[Dict[str, Any]] = []
 
@@ -295,7 +459,46 @@ def get_audit_history(limit: int = 20) -> List[Dict[str, Any]]:
     try:
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute(query, (limit,))
+                if user_id is not None:
+                    query = """
+                        SELECT
+                            id,
+                            user_id,
+                            password_hash,
+                            score,
+                            length,
+                            has_upper,
+                            has_lower,
+                            has_digit,
+                            has_symbol,
+                            is_common,
+                            checked_at
+                        FROM audit_log
+                        WHERE user_id = %s
+                        ORDER BY checked_at DESC
+                        LIMIT %s;
+                    """
+                    cur.execute(query, (int(user_id), limit))
+                else:
+                    query = """
+                        SELECT
+                            id,
+                            user_id,
+                            password_hash,
+                            score,
+                            length,
+                            has_upper,
+                            has_lower,
+                            has_digit,
+                            has_symbol,
+                            is_common,
+                            checked_at
+                        FROM audit_log
+                        ORDER BY checked_at DESC
+                        LIMIT %s;
+                    """
+                    cur.execute(query, (limit,))
+
                 rows = cur.fetchall()
 
                 if rows:
@@ -319,6 +522,7 @@ def get_audit_history(limit: int = 20) -> List[Dict[str, Any]]:
                         results.append(
                             {
                                 "id": row["id"],
+                                "user_id": row.get("user_id"),
                                 "password_hash": truncate_hash(full_hash),
                                 "score": score,
                                 "strength": strength,
@@ -336,19 +540,29 @@ def get_audit_history(limit: int = 20) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.warning("PostgreSQL unavailable (%s), fetching from SQLite fallback.", type(e).__name__)
 
-    # 2. Query SQLite fallback if PostgreSQL is not available or returned nothing
+    # 2. Query SQLite fallback
     try:
         _init_sqlite()
         db_path = _get_sqlite_path()
         with sqlite3.connect(db_path) as conn:
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
-            cur.execute("""
-                SELECT id, password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
-                FROM audit_log
-                ORDER BY id DESC
-                LIMIT ?;
-            """, (limit,))
+            if user_id is not None:
+                cur.execute("""
+                    SELECT id, user_id, password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
+                    FROM audit_log
+                    WHERE user_id = ?
+                    ORDER BY id DESC
+                    LIMIT ?;
+                """, (int(user_id), limit))
+            else:
+                cur.execute("""
+                    SELECT id, user_id, password_hash, score, length, has_upper, has_lower, has_digit, has_symbol, is_common, checked_at
+                    FROM audit_log
+                    ORDER BY id DESC
+                    LIMIT ?;
+                """, (limit,))
+
             rows = cur.fetchall()
 
             for row in rows:
@@ -364,6 +578,7 @@ def get_audit_history(limit: int = 20) -> List[Dict[str, Any]]:
                 results.append(
                     {
                         "id": row["id"],
+                        "user_id": row["user_id"] if "user_id" in row.keys() else 1,
                         "password_hash": truncate_hash(full_hash),
                         "score": score,
                         "strength": strength,

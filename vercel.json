@@ -2,6 +2,22 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/login",
+      "destination": "/api/index?__route__=login"
+    },
+    {
+      "source": "/register",
+      "destination": "/api/index?__route__=register"
+    },
+    {
+      "source": "/logout",
+      "destination": "/api/index?__route__=logout"
+    },
+    {
+      "source": "/settings",
+      "destination": "/api/index?__route__=settings"
+    },
+    {
       "source": "/history",
       "destination": "/api/index?__route__=history"
     },
@@ -16,6 +32,22 @@
     {
       "source": "/generate",
       "destination": "/api/index?__route__=generate"
+    },
+    {
+      "source": "/api/login",
+      "destination": "/api/index?__route__=login"
+    },
+    {
+      "source": "/api/register",
+      "destination": "/api/index?__route__=register"
+    },
+    {
+      "source": "/api/logout",
+      "destination": "/api/index?__route__=logout"
+    },
+    {
+      "source": "/api/settings",
+      "destination": "/api/index?__route__=settings"
     },
     {
       "source": "/api/history",

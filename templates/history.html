@@ -39,6 +39,13 @@
                 <a href="/" class="nav-link">Auditor</a>
                 <a href="/history" class="nav-link active">History</a>
                 <button type="button" class="nav-link" id="navSettingsBtn">Settings</button>
+                {% if current_user %}
+                <span class="user-greeting" style="color: var(--text-muted); font-size: 0.85rem; margin: 0 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    {{ current_user.full_name.split(' ')[0] }}
+                </span>
+                <a href="/logout" class="nav-link" style="color: var(--danger-color); font-weight: 600;" title="Logout securely">Logout</a>
+                {% endif %}
             </nav>
 
             <!-- Mobile Hamburger Button -->
@@ -87,6 +94,16 @@
                     </svg>
                     Settings
                 </button>
+                {% if current_user %}
+                <a href="/logout" class="mobile-nav-item" style="color: var(--danger-color);">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Logout ({{ current_user.full_name.split(' ')[0] }})
+                </a>
+                {% endif %}
             </div>
         </div>
     </div>
