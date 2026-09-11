@@ -17,6 +17,8 @@ class IndexMiddleware:
 
     def __call__(self, environ, start_response):
         path = environ.get("PATH_INFO", "")
+        if path.startswith("/static/"):
+            return self.wsgi_app(environ, start_response)
         if path.startswith("/api/index"):
             rest = path[len("/api/index"):]
             environ["PATH_INFO"] = rest if rest else "/"

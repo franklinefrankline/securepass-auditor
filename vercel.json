@@ -2,10 +2,6 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/static/(.*)",
-      "destination": "/static/$1"
-    },
-    {
       "source": "/history",
       "destination": "/api/history"
     },
@@ -22,7 +18,7 @@
       "destination": "/api/generate"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!static/).*)",
       "destination": "/api/index"
     }
   ]
