@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Password Strength Auditor - Real-time cryptographic password security evaluator, weakness analyzer, and common credential auditor.">
+    <title>Password Strength Auditor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="shield-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">PASSWORD STRENGTH AUDITOR</h1>
+                    <p class="brand-subtitle">Real-time Cryptographic Security & Vulnerability Analyzer</p>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="/history" class="btn btn-secondary nav-history-btn" id="historyNavBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Audit History
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Security Notice -->
+        <div class="security-banner" role="status">
+            <div class="security-badge">
+                <span class="pulse-dot"></span>
+                <span>Zero-Knowledge Security</span>
+            </div>
+            <p class="security-text">
+                Passwords are <strong>never</strong> stored in plaintext. Only SHA-256 cryptographic hashes and mathematical metrics are recorded in PostgreSQL.
+            </p>
+        </div>
+
+        <section class="card auditor-card" aria-labelledby="auditorHeading">
+            <h2 id="auditorHeading" class="sr-only">Password Input and Analysis</h2>
+
+            <!-- Password Input Group -->
+            <div class="form-group">
+                <div class="label-row">
+                    <label for="passwordInput" class="form-label">Target Password</label>
+                    <button type="button" class="btn-text" id="generateBtn" title="Generate a cryptographically secure random password">
+                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        Generate Strong Password
+                    </button>
+                </div>
+
+                <div class="input-wrapper">
+                    <input
+                        type="password"
+                        id="passwordInput"
+                        class="password-input"
+                        placeholder="Type a password to test..."
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-describedby="strengthMeterHelp"
+                    >
+                    <div class="input-actions">
+                        <button type="button" id="togglePasswordBtn" class="icon-btn" aria-label="Show password" title="Toggle visibility">
+                            <svg id="eyeIcon" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg id="eyeOffIcon" class="icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                        <button type="button" id="copyPasswordBtn" class="icon-btn" aria-label="Copy password" title="Copy to clipboard">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strength Meter Section -->
+            <div class="meter-section" id="strengthMeterHelp">
+                <div class="score-header">
+                    <div class="score-display">
+                        <span class="score-number" id="scoreValue">0</span>
+                        <span class="score-max">/ 100</span>
+                    </div>
+                    <div class="level-badge level-weak" id="levelBadge">WEAK</div>
+                </div>
+
+                <div class="progress-bar-container" role="progressbar" id="progressBarContainer" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Password strength score">
+                    <div class="progress-bar-fill fill-weak" id="progressBarFill" style="width: 0%;"></div>
+                </div>
+
+                <div class="meter-meta">
+                    <span id="charCountLabel">Length: 0 characters</span>
+                    <span id="auditStatusLabel" class="audit-status">Ready to analyze</span>
+                </div>
+            </div>
+
+            <!-- Live SHA-256 Digest Preview -->
+            <div class="hash-preview-box">
+                <span class="hash-label">SHA-256 DIGEST:</span>
+                <code class="hash-text" id="hashDisplay">e3b0c442...b855 (empty)</code>
+            </div>
+
+            <!-- Rule Checklist Grid -->
+            <div class="checklist-section">
+                <h3 class="section-title">SECURITY REQUIREMENTS</h3>
+                <div class="checklist-grid">
+                    <div class="check-item" id="req-length8">
+                        <span class="check-icon">✕</span>
+                        <span>Length &ge; 8 characters (+20)</span>
+                    </div>
+                    <div class="check-item" id="req-length12">
+                        <span class="check-icon">✕</span>
+                        <span>Length &ge; 12 characters (+10)</span>
+                    </div>
+                    <div class="check-item" id="req-upper">
+                        <span class="check-icon">✕</span>
+                        <span>Uppercase letter A-Z (+15)</span>
+                    </div>
+                    <div class="check-item" id="req-lower">
+                        <span class="check-icon">✕</span>
+                        <span>Lowercase letter a-z (+15)</span>
+                    </div>
+                    <div class="check-item" id="req-digit">
+                        <span class="check-icon">✕</span>
+                        <span>Numeric digit 0-9 (+15)</span>
+                    </div>
+                    <div class="check-item" id="req-symbol">
+                        <span class="check-icon">✕</span>
+                        <span>Special character (+25)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weaknesses / Vulnerability Alerts Container -->
+            <div class="feedback-section" id="feedbackSection">
+                <h3 class="section-title">VULNERABILITY & WEAKNESS AUDIT</h3>
+                <div class="alerts-container" id="alertsContainer">
+                    <div class="alert-empty">Type a password above to begin security analysis.</div>
+                </div>
+            </div>
+
+            <!-- Suggestions List -->
+            <div class="suggestions-section" id="suggestionsSection">
+                <h3 class="section-title">RECOMMENDED ACTIONS</h3>
+                <ul class="suggestions-list" id="suggestionsList">
+                    <li>Enter a secure password of at least 12 characters with mixed casing, digits, and symbols.</li>
+                </ul>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="card-footer">
+                <button type="button" class="btn btn-primary" id="logAuditBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Save Audit to Database
+                </button>
+                <a href="/history" class="btn btn-outline">
+                    View Recent Audits &rarr;
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Password Strength Auditor &bull; Production-Grade Cybersecurity Architecture &bull; PostgreSQL 15/18</p>
+    </footer>
+
+    <!-- Toast Notification for clipboard and audit save -->
+    <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

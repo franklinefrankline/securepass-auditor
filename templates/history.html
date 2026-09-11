@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Password Strength Auditor - Immutable SHA-256 Audit Log and Cryptographic History">
+    <title>Audit History - Password Strength Auditor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-grid"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="shield-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <circle cx="12" cy="11" r="3"/>
+                        <path d="M12 14v4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">AUDIT LOG REPOSITORY</h1>
+                    <p class="brand-subtitle">Immutable Cryptographic Audit Records &bull; PostgreSQL</p>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="btn btn-secondary">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"/>
+                        <polyline points="12 19 5 12 12 5"/>
+                    </svg>
+                    Back to Password Checker
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Security Banner -->
+        <div class="security-banner" role="status">
+            <div class="security-badge">
+                <span class="pulse-dot"></span>
+                <span>SHA-256 Hashes Only</span>
+            </div>
+            <p class="security-text">
+                This table reflects the <strong>latest 20 audits</strong> stored in PostgreSQL. Raw passwords are never stored in the database.
+            </p>
+        </div>
+
+        <section class="card history-card">
+            <div class="history-card-header">
+                <div>
+                    <h2 class="history-title">Recent Password Evaluations</h2>
+                    <p class="history-subtitle">Sorted by evaluation timestamp in descending order</p>
+                </div>
+                <div class="history-header-actions">
+                    <button type="button" class="btn btn-outline btn-sm" id="refreshHistoryBtn" onclick="window.location.reload();">
+                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Refresh
+                    </button>
+                    <a href="/" class="btn btn-primary btn-sm">
+                        + New Audit
+                    </a>
+                </div>
+            </div>
+
+            {% if history and history|length > 0 %}
+            <div class="table-responsive">
+                <table class="history-table" aria-label="Password audit history records">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">TRUNCATED HASH</th>
+                            <th scope="col">SCORE</th>
+                            <th scope="col">STRENGTH</th>
+                            <th scope="col">LENGTH</th>
+                            <th scope="col">COMMON?</th>
+                            <th scope="col">CHECKED AT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in history %}
+                        <tr>
+                            <td class="col-id">#{{ record.id }}</td>
+                            <td class="col-hash">
+                                <code class="hash-badge" title="Truncated SHA-256 hash">{{ record.password_hash }}</code>
+                            </td>
+                            <td class="col-score">
+                                <span class="score-pill score-{{ record.strength.lower() }}">{{ record.score }}/100</span>
+                            </td>
+                            <td class="col-strength">
+                                <span class="badge badge-{{ record.strength.lower() }}">
+                                    {{ record.strength | upper }}
+                                </span>
+                            </td>
+                            <td class="col-length">{{ record.length }} chars</td>
+                            <td class="col-common">
+                                {% if record.is_common %}
+                                    <span class="badge badge-danger">YES</span>
+                                {% else %}
+                                    <span class="badge badge-subtle">No</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-date">
+                                <time datetime="{{ record.checked_at }}">{{ record.checked_at[:19].replace('T', ' ') }}</time>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                </div>
+                <h3 class="empty-title">No password audits found</h3>
+                <p class="empty-description">Audit records will appear here once you analyze and save passwords in the auditor.</p>
+                <a href="/" class="btn btn-primary" style="margin-top: 1rem;">
+                    Perform First Password Audit
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="history-card-footer">
+                <span class="records-count">Displaying {{ history|length if history else 0 }} of max 20 recent records</span>
+                <a href="/" class="btn-text">
+                    &larr; Back to Password Checker
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Password Strength Auditor &bull; Cryptographic Audit Log &bull; PostgreSQL 15/18</p>
+    </footer>
+</body>
+</html>
