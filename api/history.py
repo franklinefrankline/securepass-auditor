@@ -9,19 +9,16 @@ if root_dir not in sys.path:
 from app import app
 
 
-class IndexMiddleware:
-    """WSGI Middleware for the main auditor interface on Vercel."""
+class HistoryMiddleware:
+    """WSGI Middleware that routes directly to /history in Flask."""
 
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        path = environ.get("PATH_INFO", "")
-        if path.startswith("/api/index"):
-            rest = path[len("/api/index"):]
-            environ["PATH_INFO"] = rest if rest else "/"
+        environ["PATH_INFO"] = "/history"
         return self.wsgi_app(environ, start_response)
 
 
-# Main serverless handler for /
-app.wsgi_app = IndexMiddleware(app.wsgi_app)
+# Dedicated serverless handler for /history
+app.wsgi_app = HistoryMiddleware(app.wsgi_app)

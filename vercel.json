@@ -7,23 +7,23 @@
     },
     {
       "source": "/history",
-      "destination": "/api/index?__route__=/history"
+      "destination": "/api/history"
     },
     {
       "source": "/check",
-      "destination": "/api/index?__route__=/check"
+      "destination": "/api/check"
     },
     {
       "source": "/health",
-      "destination": "/api/index?__route__=/health"
+      "destination": "/api/health"
     },
     {
       "source": "/generate",
-      "destination": "/api/index?__route__=/generate"
+      "destination": "/api/generate"
     },
     {
       "source": "/(.*)",
-      "destination": "/api/index?__route__=/$1"
+      "destination": "/api/index"
     }
   ]
 }

@@ -116,6 +116,7 @@ def serve_static_asset(filename: str):
 
 
 @app.route("/history", methods=["GET"])
+@app.route("/api/history", methods=["GET"])
 @app.route("/api/index/history", methods=["GET"])
 def history():
     """Returns audit history either as HTML page or JSON based on request headers."""
@@ -138,6 +139,7 @@ def history():
 # API Endpoints
 # ---------------------------------------------------------------------------
 @app.route("/health", methods=["GET"])
+@app.route("/api/health", methods=["GET"])
 @app.route("/api/index/health", methods=["GET"])
 def health():
     """Health check endpoint for smoke testing and service monitoring."""
@@ -151,6 +153,7 @@ def health():
 
 
 @app.route("/check", methods=["POST"])
+@app.route("/api/check", methods=["POST"])
 @app.route("/api/index/check", methods=["POST"])
 def check_password():
     """Evaluates password strength, hashes the password, and optionally logs the audit.
@@ -254,6 +257,7 @@ def check_password():
 
 
 @app.route("/generate", methods=["POST"])
+@app.route("/api/generate", methods=["POST"])
 @app.route("/api/index/generate", methods=["POST"])
 def generate_password():
     """Bonus feature: Generates a cryptographically secure random strong password."""
