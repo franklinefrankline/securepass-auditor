@@ -1,14 +1,16 @@
-"""Database access layer for Password Strength Auditor.
+"""Database access layer for SecurePass Auditor.
 
 Uses psycopg2 with strictly parameterized SQL queries.
 Credentials are read exclusively from environment variables via python-dotenv.
-Plaintext passwords are NEVER handled, inserted, or logged here.
+Plaintext passwords are NEVER handled, inserted, printed, or logged here.
 """
 
 from __future__ import annotations
 
 import os
+import re
 import logging
+import urllib.parse
 from contextlib import contextmanager
 from typing import Any, Dict, Generator, List, Optional, Tuple
 
@@ -16,19 +18,39 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 
-# Load environment variables from .env if present
-load_dotenv()
+# Load environment variables from .env with override=True
+load_dotenv(override=True)
 
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/password_auditor",
-)
+
+def clean_database_url(url: str) -> str:
+    """Ensures database connection URL encodes special characters in passwords safely.
+
+    Prevents raw characters like '#' or '@' in the password from corrupting the URI.
+    """
+    if not url:
+        return ""
+    match = re.match(r"^(postgresql(?:\+[a-z]+)?://)([^:]+):([^@]+)@(.+)$", url)
+    if match:
+        prefix, user, raw_pw, host_part = match.groups()
+        quoted_pw = urllib.parse.quote(urllib.parse.unquote(raw_pw))
+        return f"{prefix}{user}:{quoted_pw}@{host_part}"
+    return url
+
+
+def get_database_url() -> str:
+    """Fetches and sanitizes the database URL dynamically."""
+    raw_url = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:%23Frankline2006@localhost:5432/password_auditor",
+    )
+    return clean_database_url(raw_url)
 
 
 def truncate_hash(full_hash: str) -> str:
-    """Safely truncates a 64-character SHA-256 hash for display.
+    """Safely truncates a 64-character SHA-256 hash for safe UI presentation.
 
     Example: '2dfb3f8baf0d1...3a' -> '2dfb3f8b...3a'
     """
@@ -41,15 +63,22 @@ def truncate_hash(full_hash: str) -> str:
 def get_db_connection() -> Generator[psycopg2.extensions.connection, None, None]:
     """Context manager for PostgreSQL database connections.
 
-    Ensures transactions are committed on success and rolled back on error,
+    Ensures transactions are explicitly committed on success and rolled back on error,
     with connections cleanly closed.
     """
-    conn = psycopg2.connect(DATABASE_URL, connect_timeout=3)
+    db_url = get_database_url()
+    try:
+        conn = psycopg2.connect(db_url, connect_timeout=5)
+    except psycopg2.OperationalError as e:
+        logger.error("ERROR: Database connection failed: %s", e)
+        raise
+
     try:
         yield conn
         conn.commit()
-    except Exception:
+    except Exception as e:
         conn.rollback()
+        logger.error("ERROR: Transaction failed and was rolled back: %s", type(e).__name__)
         raise
     finally:
         conn.close()
@@ -68,7 +97,7 @@ def check_db_connection() -> Tuple[bool, str]:
                 return True, "Database connection operational"
     except Exception as e:
         logger.warning("Database connection check failed: %s", type(e).__name__)
-        return False, "Database connection unavailable"
+        return False, f"Database connection unavailable ({type(e).__name__})"
 
 
 def init_db(schema_file: Optional[str] = None) -> bool:
@@ -88,7 +117,7 @@ def init_db(schema_file: Optional[str] = None) -> bool:
         with get_db_connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(schema_sql)
-        logger.info("Database schema initialized successfully.")
+        logger.info("Database schema verified / initialized successfully.")
         return True
     except Exception as e:
         logger.error("Failed to initialize database schema: %s", type(e).__name__)
@@ -142,9 +171,13 @@ def log_audit(
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 row = cur.fetchone()
-                return row[0] if row else None
+                if row:
+                    audit_id = row[0]
+                    logger.info("SUCCESS: Inserted audit record #%s into PostgreSQL audit_log.", audit_id)
+                    return audit_id
+                return None
     except Exception as e:
-        logger.error("Failed to insert audit record: %s", type(e).__name__)
+        logger.error("ERROR: Failed to insert password audit into database: %s", type(e).__name__)
         return None
 
 
@@ -211,9 +244,9 @@ def get_audit_history(limit: int = 20) -> List[Dict[str, Any]]:
                             "checked_at": iso_date,
                         }
                     )
+                logger.info("SUCCESS: Retrieved %d audit records from database.", len(results))
     except Exception as e:
-        logger.error("Failed to fetch audit history: %s", type(e).__name__)
-        # Return empty list gracefully if table does not exist or database is offline
+        logger.error("ERROR: Failed to fetch audit history from database: %s", type(e).__name__)
         return []
 
     return results

@@ -482,9 +482,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // 5. Update Status & Toast
             if (data.logged) {
                 if (auditStatusLabel) auditStatusLabel.textContent = '✓ Logged to PostgreSQL';
-                showToast(`Analysis complete: Score ${data.score}/100 (${data.level}) & saved.`);
+                if (logAudit) {
+                    showToast(data.save_status || 'Audit saved successfully.');
+                }
             } else {
-                if (auditStatusLabel) auditStatusLabel.textContent = `Live score: ${data.score}/100 (${data.level})`;
+                if (logAudit) {
+                    if (auditStatusLabel) auditStatusLabel.textContent = '⚠ Save failed';
+                    showToast(data.save_status || 'Password analyzed, but the audit could not be saved.');
+                } else {
+                    if (auditStatusLabel) auditStatusLabel.textContent = `Live score: ${data.score}/100 (${data.level})`;
+                }
             }
 
         } catch (error) {

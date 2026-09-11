@@ -24,8 +24,8 @@ from db import (
 )
 from scorer import get_scorer
 
-# Load environment configuration
-load_dotenv()
+# Load environment configuration with override=True
+load_dotenv(override=True)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-replace-in-production")
@@ -196,9 +196,17 @@ def check_password():
         )
         logged = audit_id is not None
 
+    save_status = (
+        "Audit saved successfully."
+        if logged
+        else ("Password analyzed, but the audit could not be saved." if should_log else "")
+    )
+
     # 9. Return JSON response (Raw password is strictly omitted!)
     return jsonify({
+        "success": True,
         "score": analysis["score"],
+        "strength": analysis["level"].capitalize(),
         "level": analysis["level"],
         "issues": analysis["issues"],
         "suggestions": analysis["suggestions"],
@@ -210,6 +218,7 @@ def check_password():
         "is_common": analysis["is_common"],
         "truncated_hash": truncated,
         "logged": logged,
+        "save_status": save_status,
     }), 200
 
 
