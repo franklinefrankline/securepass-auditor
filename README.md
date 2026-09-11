@@ -1,8 +1,8 @@
-# Password Strength Auditor
+# SecurePass Auditor – Password Strength Analysis and Security Audit System
 
-A production-grade, cybersecurity-focused web application built with **Python (Flask)**, **PostgreSQL**, **HTML5**, **CSS3**, and **Vanilla JavaScript**. 
+A production-grade, cybersecurity-focused full-stack web application built with **Python (Flask)**, **PostgreSQL**, **HTML5**, **CSS3**, and **Vanilla JavaScript**. 
 
-The application analyzes password security in real time, computes strength scores from 0 to 100, detects weaknesses and predictable patterns, identifies commonly breached passwords, and logs immutable cryptographic audit records into PostgreSQL using **SHA-256 hashes**.
+SecurePass Auditor evaluates password security in real time, computes strength scores from 0 to 100, detects vulnerabilities and predictable patterns, identifies commonly breached passwords, and logs immutable cryptographic audit records into PostgreSQL using **SHA-256 hashes**.
 
 > [!IMPORTANT]
 > **Zero-Knowledge Architecture**: Raw plaintext passwords are **never** stored in PostgreSQL, printed to terminal logs, cached in files, or transmitted in response payloads. Only irreversible 256-bit SHA-256 digests and calculated complexity flags are recorded.
@@ -16,14 +16,30 @@ The application analyzes password security in real time, computes strength score
   - `0 – 40`: **WEAK** (Crimson `#ef4444`)
   - `41 – 70`: **FAIR** (Amber `#f59e0b`)
   - `71 – 100`: **STRONG** (Emerald `#10b981`)
-- **Common Password Detection**: Checks against a curated dictionary of breached passwords loaded in an in-memory Python `set` for $O(1)$ constant-time lookup. Common passwords have their score capped at 20.
+- **Common Password Detection**: Checks against a curated dictionary of breached passwords loaded into an in-memory Python `set` for $O(1)$ constant-time lookup. Common passwords have their score capped at 20.
 - **Predictable Pattern Recognition**:
   - Consecutive character repetitions (e.g. `aaa`, `111`, `!!!`)
   - Ascending and descending numeric sequences (e.g. `123`, `4567`, `987`)
   - Keyboard walk sequences (e.g. `qwerty`, `asdf`, `zxcv`)
-- **Security Requirements Checklist**: Interactive checkmarks for Length $\ge 8$, Length $\ge 12$, Uppercase, Lowercase, Numbers, and Special Characters.
+- **Password Analysis Checklist**: Interactive checkmarks for Uppercase, Lowercase, Numbers, Special Characters, Length $\ge 8$, and Length $\ge 12$.
 - **Cryptographic Audit Logging**: Logs evaluations to PostgreSQL with SHA-256 hashes, timestamps, and character-type flags using parameterized queries.
-- **Audit History Repository**: Responsive table viewing the latest 20 audits with truncated hashes (`8acf...91`) and timestamps.
+- **Audit History Repository**:
+  - Desktop table view of the latest 20 audits with truncated hashes (`8acf...91`) and timestamps.
+  - Mobile-responsive card transformation preventing horizontal overflow.
+  - In-place dynamic **Refresh** button staying on `/history`.
+  - Direct navigation to `/` via **+ New Audit** and **Back to Password Checker**.
+- **UI Customization & Settings Panel**:
+  - **Themes**: Dark (Cybersecurity), Light (Clean Crisp), System Default.
+  - **Accent Colors**: Blue, Purple, Green, Orange, Red (with interactive color swatches).
+  - **Font Size**: Small (14px), Medium (16px), Large (18px).
+  - **Layout Density**: Comfortable (spacious), Compact (dense).
+  - **Strength Meter Styles**: Solid Dynamic Bar, Full Spectrum Gradient, Segmented Security Blocks.
+  - **Interface Animations**: Enabled (smooth transitions) or Disabled (reduced motion).
+  - **Persistent Preferences**: Saved in `localStorage` and automatically restored across page refreshes.
+  - **Reset Settings**: Restores default UI preferences without modifying or deleting database audit records.
+- **Fully Responsive & Touch-Friendly**:
+  - Desktop ($\ge 1024$px), Tablet ($768$–$1023$px), Mobile ($< 768$px), Small Mobile ($< 480$px).
+  - Touch-friendly tap targets ($\ge 44$px height), comfortable input fields, and mobile hamburger navigation drawer.
 - **Security Hardening**:
   - `Content-Security-Policy`
   - `X-Content-Type-Options: nosniff`
@@ -43,13 +59,38 @@ The application analyzes password security in real time, computes strength score
 - **Database**: PostgreSQL 15+ (also supports 16, 17, 18)
 - **Database Driver**: `psycopg2-binary`
 - **Environment Management**: `python-dotenv`
-- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Cyber Dark Design System), Vanilla JavaScript (ES6+)
+- **Frontend**: Semantic HTML5, Vanilla CSS3 (Custom Cyber Dark Design System with CSS variables), Vanilla JavaScript (ES6+)
 - **Security**: Python `hashlib` (SHA-256), `secrets`
 - **Testing**: Python `unittest`
 
 ---
 
-## 3. Project Structure
+## 3. Application Flow & Architecture
+
+```
+                    SECUREPASS AUDITOR
+                           |
+             +-------------+-------------+
+             |             |             |
+             ▼             ▼             ▼
+           Auditor       History       Settings
+             |             |             |
+             |             |             +--> UI customization (localStorage)
+             |             |
+             |             +-----------------> Latest 20 audits from PostgreSQL
+             |
+             +-------------------------------> Real-time score & POST /check
+```
+
+1. **User enters password** on the main page (`/`).
+2. Keystrokes trigger debounced live evaluation (300ms) or clicking **CHECK PASSWORD** triggers manual audit.
+3. Backend validates input, evaluates complexity, detects patterns/common passwords, generates a SHA-256 hash, and inserts the audit record into PostgreSQL.
+4. JSON result updates the UI in place without page redirect.
+5. User clicks **View History** to inspect `/history` or **Settings** to customize theme, accent color, and layout.
+
+---
+
+## 4. Project Structure
 
 ```
 Password Strength Auditor/
@@ -66,111 +107,85 @@ Password Strength Auditor/
 ├── .env.example            # Environment configuration template
 │
 ├── templates/
-│   ├── index.html          # Main auditor interface
-│   └── history.html        # Immutable audit history page
+│   ├── index.html          # Main auditor interface & Settings modal
+│   └── history.html        # Immutable audit history repository & Settings modal
 │
 ├── static/
-│   ├── style.css           # Vanilla CSS cybersecurity design system
-│   └── app.js              # Real-time debounced evaluation & DOM updates
+│   ├── style.css           # Vanilla CSS design system with CSS custom properties
+│   └── app.js              # Real-time evaluation, navigation, and settings engine
 │
 └── tests/
-    └── test_auditor.py     # Automated test suite (scoring, API, headers)
+    └── test_auditor.py     # Automated test suite (22 unit & integration tests)
 ```
 
 ---
 
-## 4. Windows Setup & Installation (No Docker Required)
+## 5. Windows Setup & Installation (No Docker Required)
 
-### Step 1: Install Python
-Ensure Python 3.11 or higher is installed and available in your PATH:
+### Step 1: Clone or Navigate to the Project
 ```powershell
-py --version
-# or
-python --version
+cd "d:\Password Strength Auditor"
 ```
 
-### Step 2: Install PostgreSQL
-Ensure PostgreSQL is installed and the service is running:
-```powershell
-Get-Service -Name *postgres*
-```
-
-### Step 3: Create the Database
-Launch PostgreSQL CLI (`psql`) as the `postgres` administrative user:
-```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres
-```
-Create the `password_auditor` database:
-```sql
-CREATE DATABASE password_auditor;
-\q
-```
-
-### Step 4: Configure Environment Variables
-Copy `.env.example` to `.env`:
-```powershell
-Copy-Item .env.example .env
-```
-Open `.env` and configure your PostgreSQL username and password:
-```env
-FLASK_ENV=development
-FLASK_DEBUG=1
-SECRET_KEY=cybersecurity-super-secret-key
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/password_auditor
-```
-*(Replace `YOUR_PASSWORD` with your PostgreSQL password).*
-
-### Step 5: Create and Activate Virtual Environment
+### Step 2: Create and Activate Virtual Environment
 ```powershell
 # Create virtual environment
-py -m venv venv
+python -m venv venv
 
-# Activate virtual environment
+# Activate virtual environment in PowerShell
 .\venv\Scripts\Activate.ps1
 ```
 
-### Step 6: Install Dependencies
+### Step 3: Install Dependencies
 ```powershell
 pip install -r requirements.txt
 ```
 
-### Step 7: Initialize Database Schema
-Run the initialization script or apply `schema.sql` directly:
+### Step 4: Create PostgreSQL Database & Schema
+Ensure PostgreSQL is running, then run `psql` to create the database:
+```powershell
+# Adjust path to your PostgreSQL psql.exe version if needed
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -c "CREATE DATABASE password_auditor;"
+```
+Apply `schema.sql`:
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d password_auditor -f schema.sql
+```
+*Or initialize via the included Python utility:*
 ```powershell
 python init_db.py
 ```
-*Or using psql:*
+
+### Step 5: Configure Environment Variables
+Copy `.env.example` to `.env`:
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d password_auditor -f schema.sql
+Copy-Item .env.example .env
+```
+Ensure `.env` contains your PostgreSQL credentials:
+```env
+FLASK_ENV=development
+FLASK_DEBUG=1
+SECRET_KEY=dev-secret-key-change-in-production
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/password_auditor
 ```
 
 ---
 
-## 5. Running the Application
+## 6. Running the Application
 
 Start the Flask development server:
 ```powershell
 python app.py
 ```
 
-Open your browser and navigate to:
-```
-http://127.0.0.1:5000
-```
-
-To view the audit history:
-```
-http://127.0.0.1:5000/history
-```
-
-To run a health check:
-```
-http://127.0.0.1:5000/health
-```
+Navigate to:
+* **Auditor Main Dashboard**: [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+* **Audit History**: [http://127.0.0.1:5000/history](http://127.0.0.1:5000/history)
+* **Health Endpoint**: [http://127.0.0.1:5000/health](http://127.0.0.1:5000/health)
 
 ---
 
-## 6. API Documentation
+## 7. API Documentation
 
 ### `POST /check`
 Analyzes password complexity, calculates score, checks dictionary and patterns, generates SHA-256 hash, and logs the audit.
@@ -212,37 +227,13 @@ Content-Type: application/json
 
 ### `GET /history`
 Returns the latest 20 audit evaluations.
-
 - If requested by browser: renders `history.html`.
-- If requested with `Accept: application/json` or `?format=json`: returns JSON.
-
-**Response (JSON):**
-```json
-{
-    "history": [
-        {
-            "id": 1,
-            "password_hash": "b2f6c91a...390e",
-            "score": 85,
-            "strength": "Strong",
-            "length": 19,
-            "has_upper": true,
-            "has_lower": true,
-            "has_digit": true,
-            "has_symbol": true,
-            "is_common": false,
-            "checked_at": "2026-09-11T10:00:00"
-        }
-    ]
-}
-```
+- If requested with `Accept: application/json`: returns JSON `{"history": [...]}`.
 
 ---
 
 ### `GET /health`
-Smoke test endpoint verifying application and database connectivity.
-
-**Response:**
+Smoke test endpoint returning service and database connectivity:
 ```json
 {
     "status": "ok",
@@ -254,9 +245,7 @@ Smoke test endpoint verifying application and database connectivity.
 ---
 
 ### `POST /generate`
-Generates a cryptographically strong random password using Python's `secrets` module.
-
-**Response:**
+Generates a cryptographically strong random password using Python's `secrets` module:
 ```json
 {
     "generated_password": "k9#R!vQ8&mZx$2P@"
@@ -265,7 +254,7 @@ Generates a cryptographically strong random password using Python's `secrets` mo
 
 ---
 
-## 7. Scoring Algorithm Specifications
+## 8. Scoring Algorithm Specifications
 
 Scores range strictly between **0 and 100**:
 
@@ -280,59 +269,26 @@ Scores range strictly between **0 and 100**:
 | **Repeated characters deduction** (e.g. `aaa`, `111`) | -10 |
 | **Numeric sequence deduction** (e.g. `123`, `4567`) | -5 |
 | **Keyboard pattern deduction** (e.g. `qwerty`, `asdf`) | -10 |
-| **Common password detected** | **Score capped at 20** |
+| **Common password detected** | **Score strictly capped at 20** |
 
 ---
 
-## 8. Security Concepts & Hardening
+## 9. Database Security Verification
 
-1. **SHA-256 One-Way Hashing**:
-   Passwords undergo SHA-256 hashing via `hashlib.sha256(password.encode('utf-8')).hexdigest()`. The raw password is never stored or echoed back.
-2. **Parameterized SQL Queries**:
-   All database operations use `%s` parameter placeholders with `psycopg2`. No SQL injection vulnerabilities are possible.
-3. **Defense-in-Depth HTTP Headers**:
-   - `Content-Security-Policy`: Blocks untrusted script sources.
-   - `X-Content-Type-Options: nosniff`: Prevents MIME confusion attacks.
-   - `X-Frame-Options: DENY`: Prevents UI redressing / clickjacking.
-   - `Referrer-Policy: strict-origin-when-cross-origin`: Restricts sensitive referrer leakage.
-4. **Environment Isolation**:
-   Credentials reside in `.env`, which is strictly excluded from version control via `.gitignore`.
+To verify that **no raw passwords** are ever saved into PostgreSQL:
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d password_auditor -c "SELECT id, password_hash, score, length, is_common, checked_at FROM audit_log;"
+```
+*Result: Only irreversible 64-character SHA-256 hex strings and complexity metrics are stored.*
 
 ---
 
-## 9. Running Automated Tests
+## 10. Automated Tests
 
-Run the automated test suite verifying scoring logic, pattern checks, API routes, and security headers:
-
+Run the complete 22-test automated test suite:
 ```powershell
 python -m unittest tests/test_auditor.py -v
 ```
-
----
-
-## 10. Git / GitHub Setup
-
-Initialize git repository and dev branch:
-```powershell
-# Initialize git
-git init
-
-# Verify that .env is ignored
-git status
-
-# Add and commit
-git add .
-git commit -m "Initial Password Strength Auditor project"
-
-# Switch to development branch
-git checkout -b dev
-```
-
-Verify that `.env` was never tracked:
-```powershell
-git log -- .env
-```
-*(Should return empty, proving credentials were never committed).*
 
 ---
 

@@ -86,6 +86,29 @@ class TestScorerEngine(unittest.TestCase):
         self.assertGreaterEqual(result["score"], 70)
         self.assertEqual(result["level"], "STRONG")
 
+    def test_common_password_plain_password(self):
+        """'password' detected as common and capped at 20."""
+        result = self.scorer.evaluate("password")
+        self.assertTrue(result["is_common"])
+        self.assertLessEqual(result["score"], 20)
+        self.assertEqual(result["level"], "WEAK")
+
+    def test_frank_at_123(self):
+        """'Frank@123' has length >= 8, upper, lower, digit, symbol."""
+        result = self.scorer.evaluate("Frank@123")
+        self.assertTrue(result["has_upper"])
+        self.assertTrue(result["has_lower"])
+        self.assertTrue(result["has_digit"])
+        self.assertTrue(result["has_symbol"])
+        self.assertGreaterEqual(result["score"], 60)
+
+    def test_very_strong_password_2026(self):
+        """'VeryStrong@Password2026!' has maximum score 100 and STRONG."""
+        result = self.scorer.evaluate("VeryStrong@Password2026!")
+        self.assertEqual(result["score"], 100)
+        self.assertEqual(result["level"], "STRONG")
+        self.assertFalse(result["is_common"])
+
     def test_empty_password(self):
         """Test 7: Empty password handled gracefully."""
         result = self.scorer.evaluate("")

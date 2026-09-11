@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Password Strength Auditor - Real-time cryptographic password security evaluator, weakness analyzer, and common credential auditor.">
-    <title>Password Strength Auditor</title>
+    <meta name="description" content="SecurePass Auditor - Password Strength Analysis and Security Audit System. Real-time cryptographic evaluation, vulnerability detection, and immutable audit logging.">
+    <title>SecurePass Auditor – Password Strength Analysis and Security Audit System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="background-grid"></div>
 
+    <!-- Application Navigation Header -->
     <header class="app-header">
         <div class="header-container">
-            <div class="brand">
+            <a href="/" class="brand" aria-label="SecurePass Auditor Home">
                 <div class="shield-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -23,44 +24,94 @@
                     </svg>
                 </div>
                 <div>
-                    <h1 class="brand-title">PASSWORD STRENGTH AUDITOR</h1>
-                    <p class="brand-subtitle">Real-time Cryptographic Security & Vulnerability Analyzer</p>
+                    <h1 class="brand-title">SecurePass Auditor</h1>
+                    <p class="brand-subtitle">Password Strength Analysis &amp; Security Audit System</p>
                 </div>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="desktop-nav" aria-label="Primary Navigation">
+                <a href="/" class="nav-link active">Auditor</a>
+                <a href="/history" class="nav-link" id="navHistoryLink">History</a>
+                <button type="button" class="nav-link" id="navSettingsBtn">Settings</button>
+            </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="mobile-nav-drawer" id="mobileNavDrawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <div class="brand">
+                    <div class="shield-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <span class="brand-title">SecurePass</span>
+                </div>
+                <button type="button" class="icon-btn" id="closeMobileMenuBtn" aria-label="Close navigation menu">✕</button>
             </div>
-            <nav class="header-nav">
-                <a href="/history" class="btn btn-secondary nav-history-btn" id="historyNavBtn">
+            <div class="mobile-nav-links">
+                <a href="/" class="mobile-nav-item active">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Auditor
+                </a>
+                <a href="/history" class="mobile-nav-item">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    View History
+                    History
                 </a>
-            </nav>
+                <button type="button" class="mobile-nav-item" id="mobileSettingsItemBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Settings
+                </button>
+            </div>
         </div>
-    </header>
+    </div>
 
+    <!-- Main Application Container -->
     <main class="main-container">
-        <!-- Security Notice -->
+        <!-- Zero-Knowledge Security Notice -->
         <div class="security-banner" role="status">
             <div class="security-badge">
                 <span class="pulse-dot"></span>
                 <span>Zero-Knowledge Security</span>
             </div>
             <p class="security-text">
-                Passwords are <strong>never</strong> stored in plaintext. Only SHA-256 cryptographic hashes and mathematical metrics are recorded in PostgreSQL.
+                Raw passwords are <strong>never</strong> stored. Only SHA-256 hashes and complexity metrics are recorded in PostgreSQL.
             </p>
         </div>
 
-        <section class="card auditor-card" aria-labelledby="auditorHeading">
-            <h2 id="auditorHeading" class="sr-only">Password Input and Analysis</h2>
+        <!-- Main Password Checker Card -->
+        <section class="card auditor-card" aria-labelledby="auditorTitle">
+            <div class="card-title-header">
+                <h2 id="auditorTitle" class="card-title">Password Security Checker</h2>
+                <p class="card-subtitle">Real-time cryptographic analysis, weakness detection, and common credential auditing.</p>
+            </div>
 
-            <!-- Password Form (Explicit Check Password and View History) -->
+            <!-- Password Form -->
             <form id="passwordForm" method="POST" action="javascript:void(0);" novalidate>
-                <!-- Password Input Group -->
                 <div class="form-group">
                     <div class="label-row">
-                        <label for="passwordInput" class="form-label">Target Password</label>
-                        <button type="button" class="btn-text" id="generateBtn" title="Generate a cryptographically secure random password">
+                        <label for="passwordInput" class="form-label">Enter your password</label>
+                        <button type="button" class="btn-text" id="generateBtn" title="Generate cryptographically secure password">
                             <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
                             </svg>
@@ -100,30 +151,40 @@
                     </div>
                 </div>
 
-                <!-- Primary Action Buttons directly under password input -->
+                <!-- Primary Action Buttons -->
                 <div class="form-actions-row">
                     <button type="submit" class="btn btn-primary" id="checkPasswordBtn">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Check Password
+                        CHECK PASSWORD
                     </button>
                     <a href="/history" class="btn btn-outline" id="viewHistoryBtn">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
                             <polyline points="12 6 12 12 16 14"/>
                         </svg>
-                        View History
+                        VIEW HISTORY
                     </a>
+                    <button type="button" class="btn btn-secondary" id="openSettingsInlineBtn">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        SETTINGS
+                    </button>
                 </div>
             </form>
 
             <!-- Strength Meter Section -->
             <div class="meter-section" id="strengthMeterHelp">
                 <div class="score-header">
-                    <div class="score-display">
-                        <span class="score-number" id="scoreValue">0</span>
-                        <span class="score-max">/ 100</span>
+                    <div>
+                        <span class="section-title" style="display: block; margin-bottom: 0.25rem;">Strength</span>
+                        <div class="score-display">
+                            <span class="score-number" id="scoreValue">0</span>
+                            <span class="score-max">/ 100</span>
+                        </div>
                     </div>
                     <div class="level-badge level-weak" id="levelBadge">WEAK</div>
                 </div>
@@ -144,18 +205,10 @@
                 <code class="hash-text" id="hashDisplay">e3b0c442...b855 (empty)</code>
             </div>
 
-            <!-- Rule Checklist Grid -->
+            <!-- Password Analysis Requirements Checklist -->
             <div class="checklist-section">
-                <h3 class="section-title">SECURITY REQUIREMENTS</h3>
+                <h3 class="section-title">Password Analysis</h3>
                 <div class="checklist-grid">
-                    <div class="check-item" id="req-length8">
-                        <span class="check-icon">✕</span>
-                        <span>Length &ge; 8 characters (+20)</span>
-                    </div>
-                    <div class="check-item" id="req-length12">
-                        <span class="check-icon">✕</span>
-                        <span>Length &ge; 12 characters (+10)</span>
-                    </div>
                     <div class="check-item" id="req-upper">
                         <span class="check-icon">✕</span>
                         <span>Uppercase letter A-Z (+15)</span>
@@ -166,18 +219,26 @@
                     </div>
                     <div class="check-item" id="req-digit">
                         <span class="check-icon">✕</span>
-                        <span>Numeric digit 0-9 (+15)</span>
+                        <span>Number 0-9 (+15)</span>
                     </div>
                     <div class="check-item" id="req-symbol">
                         <span class="check-icon">✕</span>
-                        <span>Special character (+25)</span>
+                        <span>Special Character (+25)</span>
+                    </div>
+                    <div class="check-item" id="req-length8">
+                        <span class="check-icon">✕</span>
+                        <span>Length &ge; 8 characters (+20)</span>
+                    </div>
+                    <div class="check-item" id="req-length12">
+                        <span class="check-icon">✕</span>
+                        <span>Length &ge; 12 characters (+10)</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Weaknesses / Vulnerability Alerts Container -->
+            <!-- Vulnerability & Weakness Audit -->
             <div class="feedback-section" id="feedbackSection">
-                <h3 class="section-title">VULNERABILITY & WEAKNESS AUDIT</h3>
+                <h3 class="section-title">Weaknesses</h3>
                 <div class="alerts-container" id="alertsContainer">
                     <div class="alert-empty">Type a password above to begin security analysis.</div>
                 </div>
@@ -185,32 +246,121 @@
 
             <!-- Suggestions List -->
             <div class="suggestions-section" id="suggestionsSection">
-                <h3 class="section-title">RECOMMENDED ACTIONS</h3>
+                <h3 class="section-title">Suggestions</h3>
                 <ul class="suggestions-list" id="suggestionsList">
                     <li>Enter a secure password of at least 12 characters with mixed casing, digits, and symbols.</li>
                 </ul>
             </div>
 
-            <!-- Footer Action -->
+            <!-- Bottom Navigation & Settings Action -->
             <div class="card-footer">
-                <button type="button" class="btn btn-primary" id="checkPasswordFooterBtn">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Check Password
-                </button>
                 <a href="/history" class="btn btn-outline" id="viewHistoryFooterBtn">
-                    View History &rarr;
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    VIEW HISTORY
                 </a>
+                <button type="button" class="btn btn-secondary" id="footerSettingsBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    SETTINGS
+                </button>
             </div>
         </section>
     </main>
 
+    <!-- UI Customization & Settings Modal -->
+    <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="settingsTitle" class="modal-title">UI Customization &amp; Settings</h2>
+                <button type="button" class="icon-btn" id="closeSettingsBtn" aria-label="Close settings dialog">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- 1. Theme -->
+                <div class="setting-item">
+                    <label for="settingTheme" class="setting-label">Theme</label>
+                    <select id="settingTheme" class="setting-select">
+                        <option value="dark">Dark Theme (Cybersecurity)</option>
+                        <option value="light">Light Theme (Clean Crisp)</option>
+                        <option value="system">System Default</option>
+                    </select>
+                </div>
+
+                <!-- 2. Accent Color -->
+                <div class="setting-item">
+                    <label class="setting-label">Accent Color</label>
+                    <div class="accent-picker" id="accentPicker">
+                        <button type="button" class="accent-swatch swatch-blue active" data-accent="blue" aria-label="Blue Accent"></button>
+                        <button type="button" class="accent-swatch swatch-purple" data-accent="purple" aria-label="Purple Accent"></button>
+                        <button type="button" class="accent-swatch swatch-green" data-accent="green" aria-label="Green Accent"></button>
+                        <button type="button" class="accent-swatch swatch-orange" data-accent="orange" aria-label="Orange Accent"></button>
+                        <button type="button" class="accent-swatch swatch-red" data-accent="red" aria-label="Red Accent"></button>
+                    </div>
+                </div>
+
+                <!-- 3. Font Size -->
+                <div class="setting-item">
+                    <label for="settingFontSize" class="setting-label">Font Size</label>
+                    <select id="settingFontSize" class="setting-select">
+                        <option value="small">Small (14px)</option>
+                        <option value="medium" selected>Medium (16px - Standard)</option>
+                        <option value="large">Large (18px)</option>
+                    </select>
+                </div>
+
+                <!-- 4. Layout Density -->
+                <div class="setting-item">
+                    <label for="settingLayout" class="setting-label">Layout Density</label>
+                    <select id="settingLayout" class="setting-select">
+                        <option value="comfortable" selected>Comfortable (Spacious)</option>
+                        <option value="compact">Compact (Dense)</option>
+                    </select>
+                </div>
+
+                <!-- 5. Strength Meter Style -->
+                <div class="setting-item">
+                    <label for="settingMeterStyle" class="setting-label">Strength Meter Style</label>
+                    <select id="settingMeterStyle" class="setting-select">
+                        <option value="bar" selected>Solid Dynamic Bar</option>
+                        <option value="gradient">Full Spectrum Gradient</option>
+                        <option value="segmented">Segmented Security Blocks</option>
+                    </select>
+                </div>
+
+                <!-- 6. Animations -->
+                <div class="setting-item">
+                    <label for="settingAnimations" class="setting-label">Interface Animations</label>
+                    <select id="settingAnimations" class="setting-select">
+                        <option value="on" selected>Enabled (Smooth Transitions)</option>
+                        <option value="off">Disabled (Reduced Motion)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="resetSettingsBtn">
+                    <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    RESET SETTINGS
+                </button>
+                <button type="button" class="btn btn-primary" id="saveCloseSettingsBtn">
+                    SAVE &amp; CLOSE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Footer -->
     <footer class="app-footer">
-        <p>Password Strength Auditor &bull; Production-Grade Cybersecurity Architecture &bull; PostgreSQL 15/18</p>
+        <p>SecurePass Auditor &bull; Password Strength Analysis and Security Audit System &bull; PostgreSQL 15/18</p>
     </footer>
 
-    <!-- Toast Notification for clipboard and audit save -->
+    <!-- Toast Notification -->
     <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
     <script src="/static/app.js"></script>

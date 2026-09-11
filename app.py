@@ -64,12 +64,12 @@ def apply_security_headers(response: Response) -> Response:
     # Restrict permissions for camera, microphone, geolocation
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
 
-    # Content Security Policy (allows Google Fonts and local assets)
+    # Content Security Policy (allows Google Fonts, local assets, and UI state scripts)
     csp_policy = (
         "default-src 'self'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
-        "script-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
         "img-src 'self' data:; "
         "connect-src 'self';"
     )

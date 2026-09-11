@@ -3,64 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Password Strength Auditor - Immutable SHA-256 Audit Log and Cryptographic History">
-    <title>Audit History - Password Strength Auditor</title>
+    <meta name="description" content="SecurePass Auditor - Immutable SHA-256 Audit Log and Cryptographic History Repository">
+    <title>Audit Log – SecurePass Auditor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="background-grid"></div>
 
+    <!-- Header Navigation -->
     <header class="app-header">
         <div class="header-container">
-            <div class="brand">
+            <a href="/" class="brand" aria-label="SecurePass Auditor Home">
                 <div class="shield-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <circle cx="12" cy="11" r="3"/>
-                        <path d="M12 14v4"/>
+                        <polyline points="12 6 12 12 16 14"/>
                     </svg>
                 </div>
                 <div>
-                    <h1 class="brand-title">AUDIT LOG REPOSITORY</h1>
-                    <p class="brand-subtitle">Immutable Cryptographic Audit Records &bull; PostgreSQL</p>
+                    <h1 class="brand-title">SecurePass Auditor</h1>
+                    <p class="brand-subtitle">Cryptographic Audit Log Repository &bull; PostgreSQL</p>
                 </div>
-            </div>
-            <nav class="header-nav">
-                <a href="/" class="btn btn-secondary">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="19" y1="12" x2="5" y2="12"/>
-                        <polyline points="12 19 5 12 12 5"/>
-                    </svg>
-                    Back to Password Checker
-                </a>
+            </a>
+
+            <!-- Desktop Navigation -->
+            <nav class="desktop-nav" aria-label="Primary Navigation">
+                <a href="/" class="nav-link">Auditor</a>
+                <a href="/history" class="nav-link active">History</a>
+                <button type="button" class="nav-link" id="navSettingsBtn">Settings</button>
             </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
         </div>
     </header>
 
+    <!-- Mobile Navigation Drawer -->
+    <div class="mobile-nav-drawer" id="mobileNavDrawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <div class="brand">
+                    <div class="shield-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <span class="brand-title">SecurePass</span>
+                </div>
+                <button type="button" class="icon-btn" id="closeMobileMenuBtn" aria-label="Close navigation menu">✕</button>
+            </div>
+            <div class="mobile-nav-links">
+                <a href="/" class="mobile-nav-item">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Auditor
+                </a>
+                <a href="/history" class="mobile-nav-item active">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    History
+                </a>
+                <button type="button" class="mobile-nav-item" id="mobileSettingsItemBtn">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                    </svg>
+                    Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
     <main class="main-container">
-        <!-- Security Banner -->
+        <!-- Security Notice -->
         <div class="security-banner" role="status">
             <div class="security-badge">
                 <span class="pulse-dot"></span>
                 <span>SHA-256 Hashes Only</span>
             </div>
             <p class="security-text">
-                This table reflects the <strong>latest 20 audits</strong> stored in PostgreSQL. Raw passwords are never stored in the database.
+                This repository reflects the <strong>latest 20 audits</strong> recorded in PostgreSQL. Raw plaintext passwords are never stored.
             </p>
         </div>
 
-        <section class="card history-card">
+        <section class="card history-card" aria-labelledby="historyHeading">
             <div class="history-card-header">
                 <div>
-                    <h2 class="history-title">Recent Password Evaluations</h2>
-                    <p class="history-subtitle">Sorted by evaluation timestamp in descending order</p>
+                    <h2 id="historyHeading" class="card-title">Recent Password Evaluations</h2>
+                    <p class="card-subtitle">Sorted by evaluation timestamp in descending order</p>
                 </div>
                 <div class="history-header-actions">
                     <button type="button" class="btn btn-outline btn-sm" id="refreshHistoryBtn">
-                        <svg class="icon-small" id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="23 4 23 10 17 10"/>
                             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                         </svg>
@@ -69,9 +116,13 @@
                     <a href="/" class="btn btn-primary btn-sm" id="newAuditBtn">
                         + New Audit
                     </a>
+                    <a href="/" class="btn btn-secondary btn-sm" id="backToCheckerNavBtn">
+                        Back to Password Checker
+                    </a>
                 </div>
             </div>
 
+            <!-- Table & Card Container -->
             <div id="historyTableContainer">
             {% if history and history|length > 0 %}
             <div class="table-responsive">
@@ -90,27 +141,27 @@
                     <tbody id="historyTableBody">
                         {% for record in history %}
                         <tr>
-                            <td class="col-id">#{{ record.id }}</td>
-                            <td class="col-hash">
+                            <td class="col-id" data-label="ID">#{{ record.id }}</td>
+                            <td class="col-hash" data-label="Truncated Hash">
                                 <code class="hash-badge" title="Truncated SHA-256 hash">{{ record.password_hash }}</code>
                             </td>
-                            <td class="col-score">
+                            <td class="col-score" data-label="Score">
                                 <span class="score-pill score-{{ record.strength.lower() }}">{{ record.score }}/100</span>
                             </td>
-                            <td class="col-strength">
+                            <td class="col-strength" data-label="Strength">
                                 <span class="badge badge-{{ record.strength.lower() }}">
                                     {{ record.strength | upper }}
                                 </span>
                             </td>
-                            <td class="col-length">{{ record.length }} chars</td>
-                            <td class="col-common">
+                            <td class="col-length" data-label="Length">{{ record.length }} chars</td>
+                            <td class="col-common" data-label="Common?">
                                 {% if record.is_common %}
                                     <span class="badge badge-danger">YES</span>
                                 {% else %}
                                     <span class="badge badge-subtle">No</span>
                                 {% endif %}
                             </td>
-                            <td class="col-date">
+                            <td class="col-date" data-label="Checked At">
                                 <time datetime="{{ record.checked_at }}">{{ record.checked_at[:19].replace('T', ' ') }}</time>
                             </td>
                         </tr>
@@ -127,7 +178,7 @@
                     </svg>
                 </div>
                 <h3 class="empty-title">No password audits found</h3>
-                <p class="empty-description">Audit records will appear here once you analyze and save passwords in the auditor.</p>
+                <p class="empty-description">Audit records will appear here once you analyze passwords in the auditor.</p>
                 <a href="/" class="btn btn-primary" style="margin-top: 1rem;" id="firstAuditBtn">
                     Perform First Password Audit
                 </a>
@@ -135,6 +186,7 @@
             {% endif %}
             </div>
 
+            <!-- Footer Actions -->
             <div class="history-card-footer">
                 <span class="records-count" id="recordsCountLabel">Displaying {{ history|length if history else 0 }} of max 20 recent records</span>
                 <a href="/" class="btn-text" id="backToCheckerFooterBtn">
@@ -144,125 +196,97 @@
         </section>
     </main>
 
+    <!-- UI Customization & Settings Modal -->
+    <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="settingsTitle" class="modal-title">UI Customization &amp; Settings</h2>
+                <button type="button" class="icon-btn" id="closeSettingsBtn" aria-label="Close settings dialog">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- 1. Theme -->
+                <div class="setting-item">
+                    <label for="settingTheme" class="setting-label">Theme</label>
+                    <select id="settingTheme" class="setting-select">
+                        <option value="dark">Dark Theme (Cybersecurity)</option>
+                        <option value="light">Light Theme (Clean Crisp)</option>
+                        <option value="system">System Default</option>
+                    </select>
+                </div>
+
+                <!-- 2. Accent Color -->
+                <div class="setting-item">
+                    <label class="setting-label">Accent Color</label>
+                    <div class="accent-picker" id="accentPicker">
+                        <button type="button" class="accent-swatch swatch-blue active" data-accent="blue" aria-label="Blue Accent"></button>
+                        <button type="button" class="accent-swatch swatch-purple" data-accent="purple" aria-label="Purple Accent"></button>
+                        <button type="button" class="accent-swatch swatch-green" data-accent="green" aria-label="Green Accent"></button>
+                        <button type="button" class="accent-swatch swatch-orange" data-accent="orange" aria-label="Orange Accent"></button>
+                        <button type="button" class="accent-swatch swatch-red" data-accent="red" aria-label="Red Accent"></button>
+                    </div>
+                </div>
+
+                <!-- 3. Font Size -->
+                <div class="setting-item">
+                    <label for="settingFontSize" class="setting-label">Font Size</label>
+                    <select id="settingFontSize" class="setting-select">
+                        <option value="small">Small (14px)</option>
+                        <option value="medium" selected>Medium (16px - Standard)</option>
+                        <option value="large">Large (18px)</option>
+                    </select>
+                </div>
+
+                <!-- 4. Layout Density -->
+                <div class="setting-item">
+                    <label for="settingLayout" class="setting-label">Layout Density</label>
+                    <select id="settingLayout" class="setting-select">
+                        <option value="comfortable" selected>Comfortable (Spacious)</option>
+                        <option value="compact">Compact (Dense)</option>
+                    </select>
+                </div>
+
+                <!-- 5. Strength Meter Style -->
+                <div class="setting-item">
+                    <label for="settingMeterStyle" class="setting-label">Strength Meter Style</label>
+                    <select id="settingMeterStyle" class="setting-select">
+                        <option value="bar" selected>Solid Dynamic Bar</option>
+                        <option value="gradient">Full Spectrum Gradient</option>
+                        <option value="segmented">Segmented Security Blocks</option>
+                    </select>
+                </div>
+
+                <!-- 6. Animations -->
+                <div class="setting-item">
+                    <label for="settingAnimations" class="setting-label">Interface Animations</label>
+                    <select id="settingAnimations" class="setting-select">
+                        <option value="on" selected>Enabled (Smooth Transitions)</option>
+                        <option value="off">Disabled (Reduced Motion)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" id="resetSettingsBtn">
+                    <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/>
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    RESET SETTINGS
+                </button>
+                <button type="button" class="btn btn-primary" id="saveCloseSettingsBtn">
+                    SAVE &amp; CLOSE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Footer -->
     <footer class="app-footer">
-        <p>Password Strength Auditor &bull; Cryptographic Audit Log &bull; PostgreSQL 15/18</p>
+        <p>SecurePass Auditor &bull; Cryptographic Audit Log Repository &bull; PostgreSQL 15/18</p>
     </footer>
 
-    <!-- Toast Notification for history updates -->
+    <!-- Toast Notification -->
     <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const refreshBtn = document.getElementById('refreshHistoryBtn');
-            const toast = document.getElementById('toast');
-            const tableContainer = document.getElementById('historyTableContainer');
-            const recordsCountLabel = document.getElementById('recordsCountLabel');
-
-            function showToast(msg) {
-                if (!toast) return;
-                toast.textContent = msg;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2500);
-            }
-
-            async function refreshHistoryData() {
-                if (!refreshBtn) return;
-                refreshBtn.disabled = true;
-                refreshBtn.style.opacity = '0.7';
-
-                try {
-                    const response = await fetch('/history', {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-
-                    const data = await response.json();
-                    const records = data.history || [];
-
-                    if (records.length === 0) {
-                        tableContainer.innerHTML = `
-                            <div class="empty-state" id="emptyHistoryState">
-                                <div class="empty-icon">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="8" y1="12" x2="16" y2="12"/>
-                                    </svg>
-                                </div>
-                                <h3 class="empty-title">No password audits found</h3>
-                                <p class="empty-description">Audit records will appear here once you analyze and save passwords in the auditor.</p>
-                                <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Perform First Password Audit</a>
-                            </div>
-                        `;
-                    } else {
-                        const rows = records.map(r => {
-                            const strLower = (r.strength || 'weak').toLowerCase();
-                            const commonBadge = r.is_common 
-                                ? '<span class="badge badge-danger">YES</span>' 
-                                : '<span class="badge badge-subtle">No</span>';
-                            const dateStr = (r.checked_at || '').substring(0, 19).replace('T', ' ');
-
-                            return `
-                                <tr>
-                                    <td class="col-id">#${r.id}</td>
-                                    <td class="col-hash"><code class="hash-badge" title="Truncated SHA-256 hash">${r.password_hash}</code></td>
-                                    <td class="col-score"><span class="score-pill score-${strLower}">${r.score}/100</span></td>
-                                    <td class="col-strength"><span class="badge badge-${strLower}">${(r.strength || '').toUpperCase()}</span></td>
-                                    <td class="col-length">${r.length} chars</td>
-                                    <td class="col-common">${commonBadge}</td>
-                                    <td class="col-date"><time datetime="${r.checked_at}">${dateStr}</time></td>
-                                </tr>
-                            `;
-                        }).join('');
-
-                        tableContainer.innerHTML = `
-                            <div class="table-responsive">
-                                <table class="history-table" id="historyTable" aria-label="Password audit history records">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">ID</th>
-                                            <th scope="col">TRUNCATED HASH</th>
-                                            <th scope="col">SCORE</th>
-                                            <th scope="col">STRENGTH</th>
-                                            <th scope="col">LENGTH</th>
-                                            <th scope="col">COMMON?</th>
-                                            <th scope="col">CHECKED AT</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="historyTableBody">
-                                        ${rows}
-                                    </tbody>
-                                </table>
-                            </div>
-                        `;
-                    }
-
-                    if (recordsCountLabel) {
-                        recordsCountLabel.textContent = `Displaying ${records.length} of max 20 recent records`;
-                    }
-
-                    showToast('History refreshed successfully.');
-                } catch (err) {
-                    console.error('Failed to refresh history:', err);
-                    showToast('Failed to refresh history data.');
-                } finally {
-                    refreshBtn.disabled = false;
-                    refreshBtn.style.opacity = '1';
-                }
-            }
-
-            if (refreshBtn) {
-                refreshBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    refreshHistoryData();
-                });
-            }
-        });
-    </script>
+    <script src="/static/app.js"></script>
 </body>
 </html>
