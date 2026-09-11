@@ -97,7 +97,7 @@ def login_required(f):
                 or request.headers.get("Accept") == "application/json"
             ):
                 return jsonify({"error": "Authentication required", "redirect": "/login"}), 401
-            return redirect(url_for("login", next=request.path))
+            return redirect("/login")
         return f(*args, **kwargs)
     return decorated_function
 
@@ -275,7 +275,7 @@ def logout():
     """Terminates user session and redirects to login."""
     session.clear()
     flash("You have been securely logged out.", "info")
-    return redirect(url_for("login"))
+    return redirect("/login")
 
 
 @app.route("/settings", methods=["GET"])
@@ -363,7 +363,7 @@ def index():
 
     # Protected main page: redirect to login if unauthenticated
     if "user_id" not in session:
-        return redirect(url_for("login"))
+        return redirect("/login")
 
     if request.method == "POST":
         return check_password()
@@ -546,7 +546,7 @@ def bad_request(e):
 def unauthorized(e):
     if request.is_json or request.path.startswith("/api"):
         return jsonify({"error": "Authentication required", "redirect": "/login"}), 401
-    return redirect(url_for("login"))
+    return redirect("/login")
 
 
 @app.errorhandler(404)
