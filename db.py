@@ -437,7 +437,7 @@ def log_audit(
                 1 if has_digit else 0,
                 1 if has_symbol else 0,
                 1 if is_common else 0,
-                datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                datetime.now(timezone.utc).isoformat(),
             ))
             conn.commit()
             audit_id = cur.lastrowid
@@ -505,11 +505,12 @@ def get_audit_history(user_id: Optional[int] = None, limit: int = 20) -> List[Di
                     for row in rows:
                         full_hash = row["password_hash"]
                         checked_at_val = row["checked_at"]
-                        iso_date = (
-                            checked_at_val.isoformat()
-                            if hasattr(checked_at_val, "isoformat")
-                            else str(checked_at_val)
-                        )
+                        if hasattr(checked_at_val, "isoformat"):
+                            iso_date = checked_at_val.isoformat()
+                        else:
+                            iso_date = str(checked_at_val)
+                        if not iso_date.endswith("Z") and "+" not in iso_date and "-" not in iso_date[10:]:
+                            iso_date = iso_date.replace(" ", "T") + "Z"
 
                         score = row["score"]
                         if score <= 40:
@@ -588,7 +589,13 @@ def get_audit_history(user_id: Optional[int] = None, limit: int = 20) -> List[Di
                         "has_digit": bool(row["has_digit"]),
                         "has_symbol": bool(row["has_symbol"]),
                         "is_common": bool(row["is_common"]),
-                        "checked_at": str(row["checked_at"]),
+                        "checked_at": (
+                            str(row["checked_at"]).replace(" ", "T") + "Z"
+                            if not str(row["checked_at"]).endswith("Z")
+                            and "+" not in str(row["checked_at"])
+                            and "-" not in str(row["checked_at"])[10:]
+                            else str(row["checked_at"])
+                        ),
                     }
                 )
             logger.info("SUCCESS: Retrieved %d audit records from SQLite fallback.", len(results))

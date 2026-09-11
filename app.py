@@ -523,6 +523,7 @@ def check_password():
         "truncated_hash": truncated,
         "logged": logged,
         "save_status": save_status,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
     }), 200
 
 

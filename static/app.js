@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         has_digit: data.has_digit,
                         has_symbol: data.has_symbol,
                         is_common: data.is_common,
-                        checked_at: new Date().toISOString().replace('T', ' ').substring(0, 19)
+                        checked_at: data.checked_at || new Date().toISOString()
                     };
                     saveClientAuditRecord(clientRecord);
                 }
@@ -720,6 +720,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyTableContainer = document.getElementById('historyTableContainer');
     const recordsCountLabel = document.getElementById('recordsCountLabel');
 
+    /**
+     * Formats any UTC timestamp into the user's current local date and time.
+     * Handles ISO 8601 strings, SQLite timestamps, and Date objects.
+     */
+    function formatLocalDateTime(val) {
+        if (!val) return '';
+        try {
+            let d;
+            if (val instanceof Date) {
+                d = val;
+            } else {
+                let str = String(val).trim();
+                // If it's a string like "YYYY-MM-DD HH:MM:SS" or "YYYY-MM-DDTHH:MM:SS" without explicit offset,
+                // it represents a UTC record from backend/database; treat as UTC with 'Z'
+                if (!str.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(str)) {
+                    str = str.replace(' ', 'T') + 'Z';
+                }
+                d = new Date(str);
+            }
+            if (isNaN(d.getTime())) {
+                return String(val).substring(0, 19).replace('T', ' ');
+            }
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            const seconds = String(d.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        } catch (e) {
+            return String(val).substring(0, 19).replace('T', ' ');
+        }
+    }
+
     async function refreshHistoryData(isSilent = false) {
         if (refreshHistoryBtn) {
             refreshHistoryBtn.disabled = true;
@@ -788,8 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const strLower = (r.strength || (r.score > 70 ? 'strong' : r.score > 40 ? 'fair' : 'weak')).toLowerCase();
                 const commonBadge = r.is_common 
                     ? '<span class="badge badge-danger">YES</span>' 
-                    : '<span class="badge badge-subtle">No</span>';
-                const dateStr = (r.checked_at || '').substring(0, 19).replace('T', ' ');
+                const dateStr = formatLocalDateTime(r.checked_at);
                 const displayId = r.id || (records.length - index);
 
                 return `
@@ -861,6 +894,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Always auto-hydrate history table on page load to ensure latest audits appear
     if (historyTableContainer) {
+        // Immediately localize any server-rendered timestamps
+        document.querySelectorAll('.col-date time').forEach(el => {
+            const raw = el.getAttribute('datetime') || el.textContent;
+            if (raw) el.textContent = formatLocalDateTime(raw);
+        });
         refreshHistoryData(true);
     }
 
