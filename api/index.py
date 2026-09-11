@@ -20,12 +20,15 @@ class VercelMiddleware:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched = environ.get("HTTP_X_MATCHED_PATH")
-        if matched and not matched.startswith("/api/index"):
-            environ["PATH_INFO"] = matched
-        elif environ.get("PATH_INFO", "").startswith("/api/index"):
-            rest = environ["PATH_INFO"][len("/api/index"):]
-            environ["PATH_INFO"] = rest if rest else "/"
+        for header_key in ("HTTP_X_MATCHED_PATH", "HTTP_X_FORWARDED_URI", "HTTP_X_ORIGINAL_URL"):
+            val = environ.get(header_key)
+            if val and not val.startswith("/api/index"):
+                environ["PATH_INFO"] = val.split("?")[0]
+                break
+        else:
+            if environ.get("PATH_INFO", "").startswith("/api/index"):
+                rest = environ["PATH_INFO"][len("/api/index"):]
+                environ["PATH_INFO"] = rest if rest else "/"
         return self.wsgi_app(environ, start_response)
 
 
