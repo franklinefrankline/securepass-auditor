@@ -92,15 +92,41 @@ def apply_security_headers(response: Response) -> Response:
 def index():
     """Renders the main Password Strength Auditor interface or delegates to requested route."""
     # Check if this was a forwarded request for a sub-route on Vercel
-    target_route = request.args.get("__route__") or request.args.get("path") or ""
-    target_route = target_route.strip("/")
-    if target_route == "history":
+    target_route = (
+        request.args.get("__route__")
+        or request.args.get("path")
+        or request.args.get("view")
+        or ""
+    ).strip("/")
+    matched = request.headers.get("x-matched-path", "")
+
+    if (
+        target_route == "history"
+        or request.path == "/history"
+        or request.path.endswith("/history")
+        or matched == "/history"
+    ):
         return history()
-    elif target_route == "check":
+    elif (
+        target_route == "check"
+        or request.path == "/check"
+        or request.path.endswith("/check")
+        or matched == "/check"
+    ):
         return check_password()
-    elif target_route == "health":
+    elif (
+        target_route == "health"
+        or request.path == "/health"
+        or request.path.endswith("/health")
+        or matched == "/health"
+    ):
         return health()
-    elif target_route == "generate":
+    elif (
+        target_route == "generate"
+        or request.path == "/generate"
+        or request.path.endswith("/generate")
+        or matched == "/generate"
+    ):
         return generate_password()
 
     if request.method == "POST":
@@ -287,6 +313,13 @@ def bad_request(e):
 
 @app.errorhandler(404)
 def not_found(e):
+    if (
+        request.path == "/history"
+        or "history" in request.path
+        or request.args.get("view") == "history"
+        or request.args.get("__route__") == "history"
+    ):
+        return history()
     if request.path.startswith("/api") or request.is_json:
         return jsonify({"error": "Resource not found"}), 404
     return render_template("index.html"), 404

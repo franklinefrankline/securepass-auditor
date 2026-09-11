@@ -3,22 +3,38 @@
   "rewrites": [
     {
       "source": "/history",
-      "destination": "/api/history"
+      "destination": "/api/index?__route__=history"
     },
     {
       "source": "/check",
-      "destination": "/api/check"
+      "destination": "/api/index?__route__=check"
     },
     {
       "source": "/health",
-      "destination": "/api/health"
+      "destination": "/api/index?__route__=health"
     },
     {
       "source": "/generate",
-      "destination": "/api/generate"
+      "destination": "/api/index?__route__=generate"
     },
     {
-      "source": "/((?!static/).*)",
+      "source": "/api/history",
+      "destination": "/api/index?__route__=history"
+    },
+    {
+      "source": "/api/check",
+      "destination": "/api/index?__route__=check"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/index?__route__=health"
+    },
+    {
+      "source": "/api/generate",
+      "destination": "/api/index?__route__=generate"
+    },
+    {
+      "source": "/((?!static/|public/).*)",
       "destination": "/api/index"
     }
   ]
