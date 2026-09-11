@@ -1025,13 +1025,13 @@
                     const data = await response.json().catch(() => ({}));
 
                     if (response.ok && data.success) {
-                        showAlert('Account created! Logging you in...', 'success');
-                        btnText.textContent = '✓ Welcome';
+                        showAlert('Account created successfully! Redirecting to login...', 'success');
+                        btnText.textContent = '✓ Account Created';
                         spinner.style.display = 'none';
 
                         setTimeout(() => {
-                            window.location.href = data.redirect || '/';
-                        }, 700);
+                            window.location.href = data.redirect || '/login?registered=1';
+                        }, 800);
                     } else {
                         submitBtn.disabled = false;
                         spinner.style.display = 'none';

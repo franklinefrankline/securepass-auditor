@@ -255,21 +255,19 @@ def register():
                 flash(msg, "error")
                 return render_template("register.html"), 400
 
-            # Auto-login after successful registration
+            # Require explicit user login: do not auto-login into home page
             session.clear()
-            session["user_id"] = user_id
-            session["user_email"] = email
-            session["user_name"] = full_name
 
             if is_json:
                 return jsonify({
                     "success": True,
-                    "message": "Account created successfully",
-                    "redirect": "/",
+                    "message": "Account created successfully! Please log in.",
+                    "redirect": "/login?registered=1",
                     "user": {"id": user_id, "name": full_name, "email": email},
                 }), 201
 
-            return redirect("/")
+            flash("Account created successfully! Please log in.", "success")
+            return redirect("/login?registered=1")
         except Exception as e:
             import traceback
             tb = traceback.format_exc()

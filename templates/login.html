@@ -858,10 +858,21 @@
                 </div>
 
                 <!-- Inline Alerts for Error and Success -->
-                <div id="authAlert" class="auth-inline-alert" role="alert">
-                    <span id="alertIcon">⚠</span>
-                    <span id="alertMessage">Invalid email or password.</span>
-                </div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div id="authAlert" class="auth-inline-alert alert-{{ 'success' if category == 'success' else 'error' }}" style="display: flex;" role="alert">
+                          <span id="alertIcon">{{ '✓' if category == 'success' else '⚠' }}</span>
+                          <span id="alertMessage">{{ message }}</span>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div id="authAlert" class="auth-inline-alert" role="alert">
+                        <span id="alertIcon">⚠</span>
+                        <span id="alertMessage">Invalid email or password.</span>
+                    </div>
+                  {% endif %}
+                {% endwith %}
 
                 <!-- Login Form -->
                 <form id="loginForm" method="POST" action="/login" novalidate>
@@ -1031,6 +1042,12 @@
 
             function hideAlert() {
                 alertBox.style.display = 'none';
+            }
+
+            // Check if redirected after successful registration
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('registered') === '1') {
+                showAlert('Account created successfully! Please log in to access your dashboard.', 'success');
             }
 
             // 4. Form Submission with Staggered States
