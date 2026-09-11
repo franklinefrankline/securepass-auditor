@@ -12,7 +12,7 @@ import secrets
 import string
 from typing import Any, Dict
 
-from flask import Flask, Response, jsonify, render_template, request
+from flask import Flask, Response, jsonify, render_template, request, send_from_directory
 from dotenv import load_dotenv
 
 from db import (
@@ -94,6 +94,13 @@ def index():
     if request.method == "POST":
         return check_password()
     return render_template("index.html")
+
+
+@app.route("/static/<path:filename>")
+def serve_static_asset(filename: str):
+    """Serves static files directly with proper MIME types."""
+    static_folder = os.path.join(BASE_DIR, "static")
+    return send_from_directory(static_folder, filename)
 
 
 @app.route("/history", methods=["GET"])
