@@ -45,6 +45,10 @@ def clean_database_url(url: str) -> str:
 
 def get_database_url() -> str:
     """Fetches and sanitizes the database URL dynamically."""
+    # In Vercel serverless, do not default to localhost if DATABASE_URL is not configured
+    if os.getenv("VERCEL") and not os.getenv("DATABASE_URL"):
+        return ""
+
     raw_url = os.getenv(
         "DATABASE_URL",
         "postgresql://postgres:%23Frankline2006@localhost:5432/password_auditor",
@@ -70,6 +74,9 @@ def get_db_connection() -> Generator[psycopg2.extensions.connection, None, None]
     with connections cleanly closed.
     """
     db_url = get_database_url()
+    if not db_url:
+        raise psycopg2.OperationalError("Database URL is not configured or unavailable in serverless environment")
+
     try:
         conn = psycopg2.connect(db_url, connect_timeout=5)
     except psycopg2.OperationalError as e:

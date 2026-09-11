@@ -90,7 +90,19 @@ def apply_security_headers(response: Response) -> Response:
 @app.route("/api/index", methods=["GET", "POST"])
 @app.route("/api/index/", methods=["GET", "POST"])
 def index():
-    """Renders the main Password Strength Auditor interface."""
+    """Renders the main Password Strength Auditor interface or delegates to requested route."""
+    # Check if this was a forwarded request for a sub-route on Vercel
+    target_route = request.args.get("__route__") or request.args.get("path") or ""
+    target_route = target_route.strip("/")
+    if target_route == "history":
+        return history()
+    elif target_route == "check":
+        return check_password()
+    elif target_route == "health":
+        return health()
+    elif target_route == "generate":
+        return generate_password()
+
     if request.method == "POST":
         return check_password()
     return render_template("index.html")
@@ -104,6 +116,7 @@ def serve_static_asset(filename: str):
 
 
 @app.route("/history", methods=["GET"])
+@app.route("/api/index/history", methods=["GET"])
 def history():
     """Returns audit history either as HTML page or JSON based on request headers."""
     records = get_audit_history(limit=20)
@@ -125,6 +138,7 @@ def history():
 # API Endpoints
 # ---------------------------------------------------------------------------
 @app.route("/health", methods=["GET"])
+@app.route("/api/index/health", methods=["GET"])
 def health():
     """Health check endpoint for smoke testing and service monitoring."""
     db_ok, db_msg = check_db_connection()
@@ -137,6 +151,7 @@ def health():
 
 
 @app.route("/check", methods=["POST"])
+@app.route("/api/index/check", methods=["POST"])
 def check_password():
     """Evaluates password strength, hashes the password, and optionally logs the audit.
 
@@ -239,6 +254,7 @@ def check_password():
 
 
 @app.route("/generate", methods=["POST"])
+@app.route("/api/index/generate", methods=["POST"])
 def generate_password():
     """Bonus feature: Generates a cryptographically secure random strong password."""
     # Ensure minimum 16 characters with at least 1 upper, 1 lower, 1 digit, 1 symbol

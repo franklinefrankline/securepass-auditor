@@ -6,8 +6,24 @@
       "destination": "/static/$1"
     },
     {
-      "source": "/((?!static/).*)",
-      "destination": "/api/index"
+      "source": "/history",
+      "destination": "/api/index?__route__=/history"
+    },
+    {
+      "source": "/check",
+      "destination": "/api/index?__route__=/check"
+    },
+    {
+      "source": "/health",
+      "destination": "/api/index?__route__=/health"
+    },
+    {
+      "source": "/generate",
+      "destination": "/api/index?__route__=/generate"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index?__route__=/$1"
     }
   ]
 }
