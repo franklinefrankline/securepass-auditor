@@ -132,6 +132,21 @@ def apply_security_headers(response: Response) -> Response:
     return response
 
 
+@app.context_processor
+def inject_current_user():
+    """Provides current_user information to all templates."""
+    user_id = session.get("user_id")
+    if user_id:
+        return {
+            "current_user": {
+                "id": user_id,
+                "email": session.get("user_email", ""),
+                "full_name": session.get("user_name", "User"),
+            }
+        }
+    return {"current_user": None}
+
+
 # ---------------------------------------------------------------------------
 # Authentication Routes
 # ---------------------------------------------------------------------------
@@ -294,7 +309,6 @@ def logout():
 @app.route("/settings", methods=["GET"])
 @app.route("/api/settings", methods=["GET"])
 @app.route("/api/index/settings", methods=["GET"])
-@login_required
 def settings():
     """Opens auditor interface with settings dialog active."""
     return render_template("index.html", open_settings=True)
@@ -374,10 +388,6 @@ def index():
     ):
         return generate_password()
 
-    # Protected main page: redirect to login if unauthenticated
-    if "user_id" not in session:
-        return redirect("/login")
-
     if request.method == "POST":
         return check_password()
 
@@ -394,9 +404,8 @@ def serve_static_asset(filename: str):
 @app.route("/history", methods=["GET"])
 @app.route("/api/history", methods=["GET"])
 @app.route("/api/index/history", methods=["GET"])
-@login_required
 def history():
-    """Returns audit history for the authenticated user only (full tenant isolation)."""
+    """Returns audit history for the active user, or general audits if guest."""
     user_id = session.get("user_id")
     records = get_audit_history(user_id=user_id, limit=20)
 
