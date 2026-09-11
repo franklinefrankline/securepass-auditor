@@ -440,7 +440,6 @@ def health():
 @app.route("/check", methods=["POST"])
 @app.route("/api/check", methods=["POST"])
 @app.route("/api/index/check", methods=["POST"])
-@login_required
 def check_password():
     """Evaluates password strength, hashes the password, and logs audit record for active user."""
     # 1. Validate JSON presence

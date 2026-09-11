@@ -822,6 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const strLower = (r.strength || (r.score > 70 ? 'strong' : r.score > 40 ? 'fair' : 'weak')).toLowerCase();
                 const commonBadge = r.is_common 
                     ? '<span class="badge badge-danger">YES</span>' 
+                    : '<span class="badge badge-subtle">No</span>';
                 const dateStr = formatLocalDateTime(r.checked_at);
                 const displayId = r.id || (records.length - index);
 
