@@ -54,7 +54,12 @@ app = Flask(
 )
 
 # Enterprise session security configuration
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "securepass-enterprise-secret-key-2026-auth-prod")
+secret = os.getenv("SECRET_KEY", "")
+if not secret or not secret.strip():
+    secret = "securepass-enterprise-secret-key-2026-auth-prod-32bytes"
+
+app.secret_key = secret
+app.config["SECRET_KEY"] = secret
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["JSON_SORT_KEYS"] = False
