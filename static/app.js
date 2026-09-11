@@ -596,30 +596,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Cryptographically secure client-side fallback generator
+    function generateSecurePasswordLocally(length = 16) {
+        const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        const lowercase = "abcdefghijkmnopqrstuvwxyz";
+        const digits = "23456789";
+        const specials = "!@#$%^&*()-_=+";
+        const allChars = uppercase + lowercase + digits + specials;
+
+        const array = new Uint32Array(length);
+        window.crypto.getRandomValues(array);
+
+        let password = "";
+        password += uppercase[array[0] % uppercase.length];
+        password += lowercase[array[1] % lowercase.length];
+        password += digits[array[2] % digits.length];
+        password += specials[array[3] % specials.length];
+
+        for (let i = 4; i < length; i++) {
+            password += allChars[array[i] % allChars.length];
+        }
+
+        const chars = password.split('');
+        const shuffleArray = new Uint32Array(chars.length);
+        window.crypto.getRandomValues(shuffleArray);
+        for (let i = chars.length - 1; i > 0; i--) {
+            const j = shuffleArray[i] % (i + 1);
+            [chars[i], chars[j]] = [chars[j], chars[i]];
+        }
+        return chars.join('');
+    }
+
     // Generate Strong Password
     if (generateBtn && passwordInput) {
         generateBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+            let newPassword = null;
+
             try {
                 const response = await fetch('/generate', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    passwordInput.value = data.generated_password;
-                    passwordInput.setAttribute('type', 'text');
-                    if (eyeIcon) eyeIcon.classList.add('hidden');
-                    if (eyeOffIcon) eyeOffIcon.classList.remove('hidden');
-
-                    evaluatePassword(data.generated_password, true);
-                    showToast('Strong random password generated and analyzed.');
+                    if (data && data.generated_password) {
+                        newPassword = data.generated_password;
+                    }
                 }
             } catch (err) {
-                console.error('Password generation error:', err);
-                showToast('Could not generate password.');
+                console.warn('Backend password generator unavailable, using client-side crypto fallback:', err);
             }
+
+            // If API didn't return a password, use client-side cryptographic RNG
+            if (!newPassword) {
+                newPassword = generateSecurePasswordLocally(16);
+            }
+
+            passwordInput.value = newPassword;
+            passwordInput.setAttribute('type', 'text');
+            if (eyeIcon) eyeIcon.classList.add('hidden');
+            if (eyeOffIcon) eyeOffIcon.classList.remove('hidden');
+
+            evaluatePassword(newPassword, true);
+            showToast('Strong random password generated and analyzed.');
         });
     }
 
