@@ -192,78 +192,87 @@ def register():
         return redirect("/")
 
     if request.method == "POST":
-        is_json = request.is_json
-        data = (request.get_json(silent=True) if is_json else request.form) or {}
+        try:
+            is_json = request.is_json
+            data = (request.get_json(silent=True) if is_json else request.form) or {}
 
-        full_name = (data.get("full_name") or data.get("name") or "").strip()
-        email = (data.get("email") or "").strip().lower()
-        password = data.get("password") or ""
-        confirm_password = data.get("confirm_password") or ""
+            full_name = (data.get("full_name") or data.get("name") or "").strip()
+            email = (data.get("email") or "").strip().lower()
+            password = data.get("password") or ""
+            confirm_password = data.get("confirm_password") or ""
 
-        # Validation
-        if not full_name:
-            msg = "Full name is required."
+            # Validation
+            if not full_name:
+                msg = "Full name is required."
+                if is_json:
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "error")
+                return render_template("register.html"), 400
+
+            if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+                msg = "A valid email address is required."
+                if is_json:
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "error")
+                return render_template("register.html"), 400
+
+            if len(password) < 8:
+                msg = "Password must be at least 8 characters long."
+                if is_json:
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "error")
+                return render_template("register.html"), 400
+
+            if password != confirm_password:
+                msg = "Passwords do not match."
+                if is_json:
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "error")
+                return render_template("register.html"), 400
+
+            # Check existing user
+            existing_user = get_user_by_email(email)
+            if existing_user:
+                msg = "An account with this email address already exists."
+                if is_json:
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "error")
+                return render_template("register.html"), 400
+
+            # Secure password hashing (Werkzeug default)
+            password_hash = generate_password_hash(password)
+            user_id, err = create_user(full_name, email, password_hash)
+
+            if err or not user_id:
+                msg = err or "Registration failed. Please try again."
+                if is_json:
+                    return jsonify({"success": False, "error": msg}), 400
+                flash(msg, "error")
+                return render_template("register.html"), 400
+
+            # Auto-login after successful registration
+            session.clear()
+            session["user_id"] = user_id
+            session["user_email"] = email
+            session["user_name"] = full_name
+
             if is_json:
-                return jsonify({"success": False, "error": msg}), 400
-            flash(msg, "error")
-            return render_template("register.html"), 400
+                return jsonify({
+                    "success": True,
+                    "message": "Account created successfully",
+                    "redirect": "/",
+                    "user": {"id": user_id, "name": full_name, "email": email},
+                }), 201
 
-        if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            msg = "A valid email address is required."
-            if is_json:
-                return jsonify({"success": False, "error": msg}), 400
-            flash(msg, "error")
-            return render_template("register.html"), 400
-
-        if len(password) < 8:
-            msg = "Password must be at least 8 characters long."
-            if is_json:
-                return jsonify({"success": False, "error": msg}), 400
-            flash(msg, "error")
-            return render_template("register.html"), 400
-
-        if password != confirm_password:
-            msg = "Passwords do not match."
-            if is_json:
-                return jsonify({"success": False, "error": msg}), 400
-            flash(msg, "error")
-            return render_template("register.html"), 400
-
-        # Check existing user
-        existing_user = get_user_by_email(email)
-        if existing_user:
-            msg = "An account with this email address already exists."
-            if is_json:
-                return jsonify({"success": False, "error": msg}), 400
-            flash(msg, "error")
-            return render_template("register.html"), 400
-
-        # Secure password hashing (Werkzeug PBKDF2/scrypt)
-        password_hash = generate_password_hash(password, method="pbkdf2:sha256", salt_length=16)
-        user_id, err = create_user(full_name, email, password_hash)
-
-        if err or not user_id:
-            msg = err or "Registration failed. Please try again."
-            if is_json:
-                return jsonify({"success": False, "error": msg}), 400
-            flash(msg, "error")
-            return render_template("register.html"), 400
-
-        # Auto-login after successful registration
-        session.clear()
-        session["user_id"] = user_id
-        session["user_email"] = email
-        session["user_name"] = full_name
-
-        if is_json:
-            return jsonify({
-                "success": True,
-                "message": "Account created successfully",
-                "redirect": "/",
-                "user": {"id": user_id, "name": full_name, "email": email},
-            }), 201
-
-        return redirect("/")
+            return redirect("/")
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            print("ERROR in register:", e, tb)
+            if request.is_json:
+                return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
+            flash(f"Server error: {str(e)}", "error")
+            return render_template("register.html"), 500
 
     return render_template("register.html")
 
@@ -580,7 +589,10 @@ def method_not_allowed(e):
 
 @app.errorhandler(500)
 def server_error(e):
-    return jsonify({"error": "Internal server error"}), 500
+    import traceback
+    err_str = str(getattr(e, "original_exception", e))
+    tb = traceback.format_exc()
+    return jsonify({"error": f"Internal server error: {err_str}", "traceback": tb}), 500
 
 
 if __name__ == "__main__":
